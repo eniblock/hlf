@@ -1,0 +1,13 @@
+stages:
+  - docker
+
+variables:
+  GIT_SUBMODULE_STRATEGY: recursive
+
+docker-ccs-builder:
+  image:
+    name: registry.gitlab.com/xdev-tech/build/docker:2.0
+  stage: docker
+  script:
+    - docker login -u $CI_REGISTRY_USER -p $CI_REGISTRY_PASSWORD $CI_REGISTRY
+    - build $CI_REGISTRY_IMAGE/fabric-ccs-builder fabric-ccs-builder
