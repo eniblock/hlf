@@ -14,12 +14,13 @@ kc_secret = 'kubectl create secret --dry-run=client -o yaml '
 load('ext://kubectl_build', 'image_build', 'kubectl_build_registry_secret', 'kubectl_build_enable')
 kubectl_build_enable(local(clk_k8s + 'features --field value --format plain kubectl_build'))
 
+dk_run = 'docker run --rm -u $(id -u):$(id -g) -v $PWD/config:/config hyperledger/fabric-tools:2.3 '
 if not os.path.exists('./config/generated/crypto-config'):
-    local('cryptogen generate --config=./config/crypto-config.yaml --output="./config/generated/crypto-config"')
+    local(dk_run + ' cryptogen generate --config=/config/crypto-config.yaml --output=/config/generated/crypto-config')
 if not os.path.exists('./config/generated/genesis.block'):
-    local('env FABRIC_CFG_PATH=$PWD/config configtxgen -profile TwoOrgsOrdererGenesis -channelID system-channel -outputBlock ./config/generated/genesis.block')
+    local(dk_run + 'env FABRIC_CFG_PATH=/config configtxgen -profile TwoOrgsOrdererGenesis -channelID system-channel -outputBlock /config/generated/genesis.block')
 if not os.path.exists('./config/generated/star.tx'):
-    local('env FABRIC_CFG_PATH=$PWD/config configtxgen -profile TwoOrgsChannel -outputCreateChannelTx ./config/generated/star.tx -channelID star')
+    local(dk_run + 'env FABRIC_CFG_PATH=/config configtxgen -profile TwoOrgsChannel -outputCreateChannelTx /config/generated/star.tx -channelID star')
 
 
 #### orderers ####
