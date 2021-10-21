@@ -1,0 +1,65 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "hlf-chaincode.fullname" . }}
+  namespace: {{ .Release.Namespace }}
+  labels:
+    {{- include "hlf-chaincode.labels" . | nindent 4 }}
+  annotations:
+    reloader.stakater.com/auto: "true"
+spec:
+  {{- if not .Values.autoscaling.enabled }}
+  replicas: {{ .Values.replicaCount }}
+  {{- end }}
+  selector:
+    matchLabels:
+      {{- include "hlf-chaincode.selectorLabels" . | nindent 6 }}
+  template:
+    metadata:
+      {{- with .Values.podAnnotations }}
+      annotations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      labels:
+        {{- include "hlf-chaincode.selectorLabels" . | nindent 8 }}
+    spec:
+      {{- with .Values.image.pullSecrets }}
+      imagePullSecrets:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      serviceAccountName: {{ include "hlf-chaincode.serviceAccountName" . }}
+      securityContext:
+        {{- toYaml .Values.podSecurityContext | nindent 8 }}
+      containers:
+        - image: "{{ .Values.image.repository | required "please provide a ccid value" }}{{ if .Values.image.tag }}:{{ .Values.image.tag }}{{ end }}"
+          name: {{ include "hlf-chaincode.fullname" . }}
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
+          env:
+            - name: CHAINCODE_CCID
+              value: {{ .Values.ccid | required "please provide a ccid value" | quote }}
+            - name: CHAINCODE_ADDRESS
+              value: "0.0.0.0:7052"
+          ports:
+            - containerPort: 7052
+          # readinessProbe:
+          #   exec:
+          #     command: ["/bin/grpc_health_probe", "-tls", "-tls-no-verify", "-addr=:7052"]
+          #   initialDelaySeconds: 30
+          # livenessProbe:
+          #   exec:
+          #     command: ["/bin/grpc_health_probe", "-tls", "-tls-no-verify", "-addr=:7052"]
+          #   initialDelaySeconds: 30
+          resources:
+{{ toYaml .Values.resources | indent 12 }}
+    {{- with .Values.nodeSelector }}
+      nodeSelector:
+{{ toYaml . | indent 8 }}
+    {{- end }}
+    {{- with .Values.affinity }}
+      affinity:
+{{ toYaml . | indent 8 }}
+    {{- end }}
+    {{- with .Values.tolerations }}
+      tolerations:
+{{ toYaml . | indent 8 }}
+    {{- end }}

@@ -1,0 +1,15 @@
+apiVersion: v2
+name: hlf-peer
+version: 4.0.0
+kubeVersion: ">= 1.19.0"
+description: Hyperledger Fabric Peer chart (these charts are forked from the one by AID:Tech and are currently not directly associated with them or Hyperledger project)
+type: application
+keywords:
+  - blockchain
+  - hyperledger
+  - fabric
+home: http://hyperledger-fabric.readthedocs.io
+sources:
+  - https://github.com/hyperledger/fabric
+icon: https://www.hyperledger.org/wp-content/uploads/2018/04/fabric-logo.png
+appVersion: 2.2.1

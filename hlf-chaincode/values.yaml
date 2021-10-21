@@ -1,0 +1,135 @@
+## Default values for hlf-ord.
+## This is a YAML-formatted file.
+## Declare variables to be passed into your templates.
+
+image:
+  repository: hyperledger/fabric-orderer
+  tag: 2.2.1
+  pullPolicy: IfNotPresent
+
+ccid:
+
+service:
+  # Cluster IP or LoadBalancer
+  type: ClusterIP
+  port: 7052
+  portMetrics: 9443
+
+##################################
+## Orderer configuration options #
+##################################
+ord:
+  ## Type of Orderer, `solo` or `kafka`
+  type: etcraft
+  ## MSP ID of the Orderer
+  mspID: OrdererMSP
+  # TLS
+  tls:
+    server:
+      enabled: "true"
+    client:
+      enabled: "false"
+  metrics:
+    provider: "disabled"
+    statsd:
+      network: "udp"
+      address: "127.0.0.1:8125"
+      writeInterval: "30s"
+      prefix: ""
+
+secrets:
+  ## These secrets should contain the Orderer crypto materials and credentials
+  ord:
+    #Credentials, saved under keys 'CA_USERNAME' and 'CA_PASSWORD'
+    # cred: hlf--ord1-cred
+
+    #Certificate, saved under key 'cert.pem' /var/hyperledger/msp/signcerts
+    cert: hlf--ord1-idcert
+
+    #Key, saved under 'key.pem' /var/hyperledger/msp/keystore
+    key: hlf--ord1-idkey
+
+    # CA Cert, saved under 'cacert.pem' /var/hyperledger/msp/cacerts
+    caCert: hlf--ord1-cacert
+
+    ## Intermediate CA Cert (optional), saved under 'intermediatecacert.pem'
+    # intCaCert: hlf--ord1-caintcert
+
+    # TLS secret, saved under keys 'tls.crt' and 'tls.key' (to conform with K8S nomenclature) server.cert / server.key
+    tls: hlf--ord1-tls
+
+    # TLS root CA certificate saved under key 'cert.pem' ca.crt
+    tlsRootCert: hlf--ord-tlsrootcert
+
+    # TLS client secret, saved under keys 'tls.crt' and 'tls.key' (to conform with K8S nomenclature)
+    tlsClient: hlf--ord1-tls-client
+
+    ## TLS client root CA certificates saved under any names (as there may be multiple)
+    tlsClientRootCert: hlf--client-tlsrootcert
+
+  # This should contain "genesis" block derived from a configtx.yaml
+  # configtxgen -profile OrdererGenesis -outputBlock genesis.block
+  genesis: hlf--genesis
+
+  # This should contain the Certificate of the Orderer Organisation admin
+  # This is necessary to successfully run the orderer
+  adminCert: hlf--ord-admincert
+
+resources:
+  ## We usually recommend not to specify default resources and to leave this as a conscious
+  ## choice for the user. This also increases chances charts run on environments with little
+  ## resources, such as Minikube. If you do want to specify resources, uncomment the following
+  ## lines, adjust them as necessary, and remove the curly braces after 'resources:'.
+  # limits:
+  #   cpu: 100m
+  #   memory: 128Mi
+  requests:
+    cpu: 100m
+    memory: 128Mi
+
+nodeSelector: {}
+
+tolerations: []
+
+affinity: {}
+  ## Suggested antiAffinity, as each Orderer should be on a separate Node for resilience
+  # podAntiAffinity:
+  #   requiredDuringSchedulingIgnoredDuringExecution:
+  #     - topologyKey: "kubernetes.io/hostname"
+  #       labelSelector:
+  #         matchLabels:
+  #           app: hlf-chaincode
+
+serviceAccount:
+  # Specifies whether a service account should be created
+  create: true
+  # Annotations to add to the service account
+  annotations: { }
+  # The name of the service account to use.
+  # If not set and create is true, a name is generated using the fullname template
+  name: ""
+
+podAnnotations: {}
+
+networkPolicy:
+  enabled: false
+
+podSecurityContext: {}
+# fsGroup: 2000
+
+securityContext: {}
+  # capabilities:
+  #   drop:
+  #   - ALL
+  # readOnlyRootFilesystem: true
+  # runAsNonRoot: true
+# runAsUser: 1000
+
+autoscaling:
+  enabled: false
+  minReplicas: 1
+  maxReplicas: 100
+  targetCPUUtilizationPercentage: 80
+  # targetMemoryUtilizationPercentage: 80
+
+replicaCount: 1

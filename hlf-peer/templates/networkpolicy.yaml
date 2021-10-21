@@ -1,0 +1,22 @@
+{{- if .Values.networkPolicy.enabled }}
+kind: NetworkPolicy
+apiVersion: networking.k8s.io/v1
+metadata:
+  name: {{ include "hlf-peer.fullname" . }}
+  namespace: {{ .Release.Namespace }}
+  labels:
+    {{- include "hlf-peer.labels" . | nindent 4 }}
+spec:
+  podSelector:
+    matchLabels:
+      {{- include "hlf-peer.selectorLabels" . | nindent 6 }}
+  ingress:
+    - from:
+        - podSelector:
+            matchLabels:
+              {{ include "hlf-peer.fullname" . }}-client: "true"
+        - podSelector:
+            matchLabels:
+              hlf-peer-msp-id: {{ .Values.peer.mspID | quote }}
+        {{- .Values.ingress.from | toYaml | nindent 8 }}
+{{- end }}

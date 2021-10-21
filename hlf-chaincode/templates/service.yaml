@@ -1,0 +1,16 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ include "hlf-chaincode.fullname" . }}
+  namespace: {{ .Release.Namespace }}
+  labels:
+    {{- include "hlf-chaincode.labels" . | nindent 4 }}
+spec:
+  type: {{ .Values.service.type }}
+  ports:
+    - port: {{ .Values.service.port }}
+      targetPort: 7052
+      protocol: TCP
+      name: grpc
+  selector:
+    {{- include "hlf-chaincode.selectorLabels" . | nindent 4 }}

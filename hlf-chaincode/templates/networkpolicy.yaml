@@ -1,0 +1,18 @@
+{{- if .Values.networkPolicy.enabled }}
+kind: NetworkPolicy
+apiVersion: networking.k8s.io/v1
+metadata:
+  name: {{ include "hlf-chaincode.fullname" . }}
+  namespace: {{ .Release.Namespace }}
+  labels:
+    {{- include "hlf-chaincode.labels" . | nindent 4 }}
+spec:
+  podSelector:
+    matchLabels:
+      {{- include "hlf-chaincode.selectorLabels" . | nindent 6 }}
+  ingress:
+    - from:
+        - podSelector:
+            matchLabels:
+              {{ include "hlf-chaincode.fullname" . }}-client: "true"
+{{- end }}
