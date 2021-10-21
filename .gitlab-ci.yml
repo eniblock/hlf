@@ -1,5 +1,6 @@
 stages:
   - docker
+  - helm
 
 variables:
   GIT_SUBMODULE_STRATEGY: recursive
