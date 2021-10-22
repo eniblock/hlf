@@ -23,21 +23,18 @@ docker-fabcar:
 
 helm-ord:
   stage: helm
-  image: registry.gitlab.com/xdev-tech/build/helm:2.0
+  image: registry.gitlab.com/xdev-tech/build/helm:develop
   script:
-    - helm registry login -u $CI_REGISTRY_USER -p $CI_REGISTRY_PASSWORD $CI_REGISTRY
-    - build $CI_REGISTRY_IMAGE/helm/hlf-ord ./hlf-ord
+    - build_std ./hlf-ord
 
 helm-peer:
   stage: helm
-  image: registry.gitlab.com/xdev-tech/build/helm:2.0
+  image: registry.gitlab.com/xdev-tech/build/helm:develop
   script:
-    - helm registry login -u $CI_REGISTRY_USER -p $CI_REGISTRY_PASSWORD $CI_REGISTRY
-    - build $CI_REGISTRY_IMAGE/helm/hlf-peer ./hlf-peer
+    - build_std ./hlf-peer
 
 helm-chaincode:
   stage: helm
-  image: registry.gitlab.com/xdev-tech/build/helm:2.0
+  image: registry.gitlab.com/xdev-tech/build/helm:develop
   script:
-    - helm registry login -u $CI_REGISTRY_USER -p $CI_REGISTRY_PASSWORD $CI_REGISTRY
-    - build $CI_REGISTRY_IMAGE/helm/hlf-chaincode ./hlf-chaincode
+    - build_std ./hlf-chaincode
