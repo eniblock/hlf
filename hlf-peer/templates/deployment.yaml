@@ -68,19 +68,6 @@ spec:
         {{- else }}
           emptyDir: {}
         {{- end }}
-        {{- if .Values.peer.docker.enabled }}
-        - name: dockersocket
-          hostPath:
-            path: {{ .Values.docker.socketPath }}
-        {{- if .Values.docker.config }}
-        - name: docker-config
-          secret:
-            secretName: {{ include "hlf-peer.fullname" . }}-dockerconfigjson
-            items:
-              - key: .dockerconfigjson
-                path: config.json
-        {{- end }}
-        {{- end }}
         {{- if .Values.secrets.peer.cert }}
         - name: id-cert
           secret:

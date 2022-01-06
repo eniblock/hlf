@@ -29,14 +29,6 @@ service:
   portEvent: 7053
   portMetrics: 9443
 
-docker:
-  # Path of the docker socket on the host
-  socketPath: /var/run/docker.sock
-  # Docker config to be used to pull the images (base64'd)
-  config: null
-  # Docker config mount path
-  configMountPath: /root/.docker
-
 persistence:
   enabled: true
   annotations: {}
