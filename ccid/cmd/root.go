@@ -18,6 +18,7 @@ package cmd
 import (
 	"archive/tar"
 	"bytes"
+	"compress/gzip"
 	"crypto/sha256"
 	"encoding/hex"
 	"encoding/json"
@@ -99,7 +100,8 @@ func generateTar(address string, label string) []byte {
 	// Create code.tar.gz
 	var codeBuf bytes.Buffer
 	{
-		tw := tar.NewWriter(&codeBuf)
+		gw := gzip.NewWriter(&codeBuf)
+		tw := tar.NewWriter(gw)
 		if err := tw.WriteHeader(&tar.Header{
 			Name:       "connection.json",
 			Mode:       0600,
@@ -110,19 +112,23 @@ func generateTar(address string, label string) []byte {
 			AccessTime: time.Unix(0, 0),
 			ChangeTime: time.Unix(0, 0),
 		}); err != nil {
-			log.WithError(err).Fatal("Can't add connection.json")
+			log.WithError(err).Fatal("Can't add connection.json header")
 		}
 		if _, err := tw.Write(connectionBytes); err != nil {
-			log.WithError(err).Fatal("Can't add connection.json")
+			log.WithError(err).Fatal("Can't add connection.json content")
 		}
 		if err := tw.Close(); err != nil {
+			log.WithError(err).Fatal("Can't generate code.tar.gz")
+		}
+		if err := gw.Close(); err != nil {
 			log.WithError(err).Fatal("Can't generate code.tar.gz")
 		}
 	}
 	// create final tar
 	var tarBuf bytes.Buffer
 	{
-		tw := tar.NewWriter(&tarBuf)
+		gw := gzip.NewWriter(&tarBuf)
+		tw := tar.NewWriter(gw)
 		// add code.tar.gz
 		if err := tw.WriteHeader(&tar.Header{
 			Name:       "code.tar.gz",
@@ -134,10 +140,10 @@ func generateTar(address string, label string) []byte {
 			AccessTime: time.Unix(0, 0),
 			ChangeTime: time.Unix(0, 0),
 		}); err != nil {
-			log.WithError(err).Fatal("Can't add code.tar.gz")
+			log.WithError(err).Fatal("Can't add code.tar.gz header")
 		}
 		if _, err := tw.Write(codeBuf.Bytes()); err != nil {
-			log.WithError(err).Fatal("Can't add code.tar.gz")
+			log.WithError(err).Fatal("Can't add code.tar.gz content")
 		}
 		// add metadata.json
 		if err := tw.WriteHeader(&tar.Header{
@@ -150,12 +156,15 @@ func generateTar(address string, label string) []byte {
 			AccessTime: time.Unix(0, 0),
 			ChangeTime: time.Unix(0, 0),
 		}); err != nil {
-			log.WithError(err).Fatal("Can't add code.tar.gz")
+			log.WithError(err).Fatal("Can't add metadata.json header")
 		}
 		if _, err := tw.Write(metadataBytes); err != nil {
-			log.WithError(err).Fatal("Can't add code.tar.gz")
+			log.WithError(err).Fatal("Can't add metadata.json content")
 		}
 		if err := tw.Close(); err != nil {
+			log.WithError(err).Fatal("Can't generate final tar")
+		}
+		if err := gw.Close(); err != nil {
 			log.WithError(err).Fatal("Can't generate final tar")
 		}
 	}
