@@ -46,8 +46,20 @@ spec:
         volumeMounts:
           - name: ccs-builder
             mountPath: /var/hyperledger/fabric/chaincode/ccs-builder/bin
+      # load the chaincode id calculator into the peer image prior to peer launch.
+      initContainers:
+      - name: ccid
+        image: registry.gitlab.com/xdev-tech/xdev-enterprise-business-network/hlf-k8s/ccid:develop
+        imagePullPolicy: IfNotPresent
+        command: [sh, -c]
+        args: ["cp /ccid /var/hyperledger/fabric/chaincode/ccid/bin"]
+        volumeMounts:
+          - name: ccid
+            mountPath: /var/hyperledger/fabric/chaincode/ccid/bin
       volumes:
         - name: ccs-builder
+          emptyDir: {}
+        - name: ccid
           emptyDir: {}
         - name: data
         {{- if .Values.persistence.enabled }}
@@ -310,6 +322,8 @@ spec:
             #   subPath: release
             - name: ccs-builder
               mountPath: /var/hyperledger/fabric/chaincode/ccs-builder/bin
+            - name: ccid
+              mountPath: /var/hyperledger/fabric/chaincode/ccid/bin
           resources:
 {{ toYaml .Values.resources | indent 12 }}
     {{- with .Values.nodeSelector }}

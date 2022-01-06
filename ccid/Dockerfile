@@ -19,7 +19,7 @@ RUN go mod download -x
 COPY . .
 RUN CGO_ENABLED=0 GOOS=linux go build -ldflags="-w -s"
 
-FROM scratch
+FROM busybox
 COPY --from=build /etc/passwd /etc/passwd
 COPY --from=build /etc/group /etc/group
 COPY --from=build /app/ccid /ccid
