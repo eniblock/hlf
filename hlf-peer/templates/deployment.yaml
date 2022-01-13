@@ -47,7 +47,6 @@ spec:
           - name: ccs-builder
             mountPath: /var/hyperledger/fabric/chaincode/ccs-builder/bin
       # load the chaincode id calculator into the peer image prior to peer launch.
-      initContainers:
       - name: ccid
         image: registry.gitlab.com/xdev-tech/xdev-enterprise-business-network/hlf-k8s/ccid:develop
         imagePullPolicy: IfNotPresent
@@ -109,10 +108,10 @@ spec:
             secretName: {{ .Values.secrets.peer.tlsClientRootCert }}
         {{- end }}
         {{- if .Values.secrets.channels }}
-          {{- range .Values.secrets.channels }}
-        - name: {{ . }}
+          {{- range $channel := .Values.secrets.channels }}
+        - name: {{ $channel.name }}
           secret:
-            secretName: {{ . }}
+            secretName: {{ $channel.secretName }}
           {{- end }}
         {{- end }}
         {{- if .Values.secrets.adminCert }}
@@ -278,9 +277,9 @@ spec:
               name: ord-tls-rootcert
             {{- end }}
             {{- if .Values.secrets.channels }}
-              {{- range .Values.secrets.channels }}
-            - mountPath: /hl_config/channel/{{ . }}
-              name: {{ . }}
+              {{- range $channel := .Values.secrets.channels }}
+            - mountPath: /hl_config/channel/{{ $channel.secretName }}
+              name: {{ $channel.name }}
               {{- end }}
             {{- end }}
             {{- if .Values.secrets.adminCert }}
