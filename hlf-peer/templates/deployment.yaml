@@ -38,23 +38,23 @@ spec:
         {{- toYaml .Values.podSecurityContext | nindent 8 }}
       # load the external chaincode builder into the peer image prior to peer launch.
       initContainers:
-      - name: fabric-ccs-builder
-        image: registry.gitlab.com/xdev-tech/xdev-enterprise-business-network/hlf-k8s/fabric-ccs-builder:develop
-        imagePullPolicy: IfNotPresent
-        command: [sh, -c]
-        args: ["cp /go/bin/* /var/hyperledger/fabric/chaincode/ccs-builder/bin/"]
-        volumeMounts:
-          - name: ccs-builder
-            mountPath: /var/hyperledger/fabric/chaincode/ccs-builder/bin
-      # load the chaincode id calculator into the peer image prior to peer launch.
-      - name: ccid
-        image: registry.gitlab.com/xdev-tech/xdev-enterprise-business-network/hlf-k8s/ccid:develop
-        imagePullPolicy: IfNotPresent
-        command: [sh, -c]
-        args: ["cp /ccid /var/hyperledger/fabric/chaincode/ccid/bin"]
-        volumeMounts:
-          - name: ccid
-            mountPath: /var/hyperledger/fabric/chaincode/ccid/bin
+        - name: fabric-ccs-builder
+          image: registry.gitlab.com/xdev-tech/xdev-enterprise-business-network/hlf-k8s/fabric-ccs-builder:develop
+          imagePullPolicy: IfNotPresent
+          command: [sh, -c]
+          args: ["cp /go/bin/* /var/hyperledger/fabric/chaincode/ccs-builder/bin/"]
+          volumeMounts:
+            - name: ccs-builder
+              mountPath: /var/hyperledger/fabric/chaincode/ccs-builder/bin
+        # load the chaincode id calculator into the peer image prior to peer launch.
+        - name: ccid
+          image: registry.gitlab.com/xdev-tech/xdev-enterprise-business-network/hlf-k8s/ccid:develop
+          imagePullPolicy: IfNotPresent
+          command: [sh, -c]
+          args: ["cp /ccid /var/hyperledger/fabric/chaincode/ccid/bin"]
+          volumeMounts:
+            - name: ccid
+              mountPath: /var/hyperledger/fabric/chaincode/ccid/bin
       volumes:
         - name: ccs-builder
           emptyDir: {}

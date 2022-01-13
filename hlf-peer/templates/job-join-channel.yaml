@@ -8,6 +8,8 @@ metadata:
   labels:
     {{- include "hlf-peer.labels" $ | nindent 4 }}
     app.kubernetes.io/component: register-chaincode
+  annotations:
+    reloader.stakater.com/auto: "true"
 spec:
   template:
     metadata:
@@ -17,101 +19,106 @@ spec:
         {{ include "hlf-peer.fullname" $ }}-client: "true"
         foo: bar
     spec:
+      serviceAccountName: {{ include "hlf-peer.serviceAccountName" $ }}
       restartPolicy: "Never"
       containers:
-      - name: main
-        image: hyperledger/fabric-tools:{{ $.Values.image.tag }}
-        env:
-          # as admin
-          - name: CORE_PEER_MSPCONFIGPATH
-            value: /var/hyperledger/admin_msp
-          # peer connection string
-          - name: CORE_PEER_ADDRESS
-            {{- if $.Values.ingress.enabled }}
-            value: {{ $.Values.ingress.host }}:443
-            {{- else }}
-            value: {{ include "hlf-peer.fullname" $ }}.{{ $.Release.Namespace }}:7051
-            {{- end }}
-        envFrom:
-          - configMapRef:
-              name: {{ include "hlf-peer.fullname" $ }}
-        command:
-          - sh
-          - -c
-          - |
-            set -ex
-            if peer channel list | grep -qE '^{{ $channel.name }}$'; then
-              echo already joined {{ $channel.name }} channel
-            else
-              # sleep a random time, to avoid having all the peers creating the channel at once
-              sleep `echo $(( RANDOM % 10 ))`
-              if ! peer channel fetch newest /hl_config/channel/{{ $channel.name }}.block -c {{ $channel.name }} --orderer {{ $channel.orderer_address }} --tls --cafile /var/hyperledger/tls/ord/cert/cacert.pem; then
-                  peer channel create -o {{ $channel.orderer_address }} -c {{ $channel.name }} -f /hl_config/channel/{{ $channel.secretName }}/{{ $channel.name }}.tx --outputBlock /hl_config/channel/{{ $channel.name }}.block --tls --cafile /var/hyperledger/tls/ord/cert/cacert.pem
+        - name: main
+          image: hyperledger/fabric-tools:{{ $.Values.image.tag }}
+          env:
+            # as admin
+            - name: CORE_PEER_MSPCONFIGPATH
+              value: /var/hyperledger/admin_msp
+            # peer connection string
+            - name: CORE_PEER_ADDRESS
+              {{- if $.Values.ingress.enabled }}
+              value: {{ $.Values.ingress.host }}:443
+              {{- else }}
+              value: {{ include "hlf-peer.fullname" $ }}.{{ $.Release.Namespace }}:7051
+              {{- end }}
+          envFrom:
+            - configMapRef:
+                name: {{ include "hlf-peer.fullname" $ }}
+          command:
+            - sh
+            - -c
+            - |
+              set -ex
+              if peer channel list | grep -qE '^{{ $channel.name }}$'; then
+                echo already joined {{ $channel.name }} channel
+              else
+                # sleep a random time, to avoid having all the peers creating the channel at once
+                sleep `echo $(( RANDOM % 10 ))`
+                if ! peer channel fetch newest /hl_config/channel/{{ $channel.name }}.block -c {{ $channel.name }} --orderer {{ $channel.orderer_address }} --tls --cafile /var/hyperledger/tls/ord/cert/cacert.pem; then
+                    peer channel create -o {{ $channel.orderer_address }} -c {{ $channel.name }} -f /hl_config/channel/{{ $channel.secretName }}/{{ $channel.name }}.tx --outputBlock /hl_config/channel/{{ $channel.name }}.block --tls --cafile /var/hyperledger/tls/ord/cert/cacert.pem
+                fi
+                peer channel join --orderer {{ $channel.orderer_address }} -b /hl_config/channel/{{ $channel.name }}.block
               fi
-              peer channel join --orderer {{ $channel.orderer_address }} -b /hl_config/channel/{{ $channel.name }}.block
-            fi
-        volumeMounts:
-          {{- if $.Values.secrets.peer.cert }}
-          - mountPath: /var/hyperledger/msp/signcerts
-            name: id-cert
-          {{- end }}
-          {{- if $.Values.secrets.peer.key }}
-          - mountPath: /var/hyperledger/msp/keystore
-            name: id-key
-          {{- end }}
-          {{- if $.Values.secrets.peer.caCert }}
-          - mountPath: /var/hyperledger/msp/cacerts
-            name: cacert
-          - mountPath: /var/hyperledger/admin_msp/cacerts
-            name: cacert
-          {{- end }}
-          {{- if $.Values.secrets.peer.intCaCert }}
-          - mountPath: /var/hyperledger/msp/intermediatecerts
-            name: intcacert
-          - mountPath: /var/hyperledger/admin_msp/intermediatecerts
-            name: intcacert
-          {{- end }}
-          {{- if $.Values.secrets.peer.tls }}
-          - mountPath: /var/hyperledger/tls/server/pair
-            name: tls
-          {{- end }}
-          {{- if $.Values.secrets.peer.tlsRootCert }}
-          - mountPath: /var/hyperledger/tls/server/cert
-            name: tls-rootcert
-          {{- end }}
-          {{- if $.Values.secrets.peer.tlsClient }}
-          - mountPath: /var/hyperledger/tls/client/pair
-            name: tls-client
-          {{- end }}
-          {{- if $.Values.secrets.peer.tlsClientRootCert }}
-          - mountPath: /var/hyperledger/tls/client/cert
-            name: tls-clientrootcert
-          {{- end }}
-          {{- if $.Values.secrets.ordTlsRootCert }}
-          - mountPath: /var/hyperledger/tls/ord/cert
-            name: ord-tls-rootcert
-          {{- end }}
-          {{- if $.Values.secrets.channels }}
-            {{- range $channel := $.Values.secrets.channels }}
-          - mountPath: /hl_config/channel/{{ $channel.secretName }}
-            name: {{ $channel.name }}
+          volumeMounts:
+            {{- if $.Values.secrets.peer.cert }}
+            - mountPath: /var/hyperledger/msp/signcerts
+              name: id-cert
             {{- end }}
-          {{- end }}
-          {{- if $.Values.secrets.adminCert }}
-          - mountPath: /var/hyperledger/admin_msp/admincerts
-            name: admin-cert
-          - mountPath: /var/hyperledger/admin_msp/signcerts
-            name: admin-cert
-          - mountPath: /var/hyperledger/msp/admincerts
-            name: admin-cert
-          {{- end }}
-          {{- if $.Values.secrets.adminKey }}
-          - mountPath: /var/hyperledger/admin_msp/keystore
-            name: admin-key
-          {{- end }}
-          - mountPath: /var/hyperledger/fabric_cfg/core.yaml
-            name: builders-config
-            subPath: core.yaml
+            {{- if $.Values.secrets.peer.key }}
+            - mountPath: /var/hyperledger/msp/keystore
+              name: id-key
+            {{- end }}
+            {{- if $.Values.secrets.peer.caCert }}
+            - mountPath: /var/hyperledger/msp/cacerts
+              name: cacert
+            - mountPath: /var/hyperledger/admin_msp/cacerts
+              name: cacert
+            {{- end }}
+            {{- if $.Values.secrets.peer.intCaCert }}
+            - mountPath: /var/hyperledger/msp/intermediatecerts
+              name: intcacert
+            - mountPath: /var/hyperledger/admin_msp/intermediatecerts
+              name: intcacert
+            {{- end }}
+            {{- if $.Values.secrets.peer.tls }}
+            - mountPath: /var/hyperledger/tls/server/pair
+              name: tls
+            {{- end }}
+            {{- if $.Values.secrets.peer.tlsRootCert }}
+            - mountPath: /var/hyperledger/tls/server/cert
+              name: tls-rootcert
+            {{- end }}
+            {{- if $.Values.secrets.peer.tlsClient }}
+            - mountPath: /var/hyperledger/tls/client/pair
+              name: tls-client
+            {{- end }}
+            {{- if $.Values.secrets.peer.tlsClientRootCert }}
+            - mountPath: /var/hyperledger/tls/client/cert
+              name: tls-clientrootcert
+            {{- end }}
+            {{- if $.Values.secrets.ordTlsRootCert }}
+            - mountPath: /var/hyperledger/tls/ord/cert
+              name: ord-tls-rootcert
+            {{- end }}
+            {{- if $.Values.secrets.channels }}
+              {{- range $channel := $.Values.secrets.channels }}
+            - mountPath: /hl_config/channel/{{ $channel.secretName }}
+              name: {{ $channel.name }}
+              {{- end }}
+            {{- end }}
+            {{- if $.Values.secrets.adminCert }}
+            - mountPath: /var/hyperledger/admin_msp/admincerts
+              name: admin-cert
+            - mountPath: /var/hyperledger/admin_msp/signcerts
+              name: admin-cert
+            - mountPath: /var/hyperledger/msp/admincerts
+              name: admin-cert
+            {{- end }}
+            {{- if $.Values.secrets.adminKey }}
+            - mountPath: /var/hyperledger/admin_msp/keystore
+              name: admin-key
+            {{- end }}
+            - mountPath: /var/hyperledger/fabric_cfg/core.yaml
+              name: builders-config
+              subPath: core.yaml
+          resources:
+            requests:
+              cpu: 100m
+              memory: 128Mi
       volumes:
         {{- if $.Values.secrets.peer.cert }}
         - name: id-cert
