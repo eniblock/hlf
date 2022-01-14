@@ -17,7 +17,6 @@ spec:
         {{- include "hlf-peer.labels" $ | nindent 8 }}
         app.kubernetes.io/component: register-chaincode
         {{ include "hlf-peer.fullname" $ }}-client: "true"
-        foo: bar
     spec:
       serviceAccountName: {{ include "hlf-peer.serviceAccountName" $ }}
       restartPolicy: "Never"
@@ -43,6 +42,10 @@ spec:
             - -c
             - |
               set -ex
+              while ! peer channel list; do
+                  echo Waiting for peer
+                  sleep 3
+              done
               if peer channel list | grep -qE '^{{ $channel.name }}$'; then
                 echo already joined {{ $channel.name }} channel
               else
