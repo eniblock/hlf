@@ -14,6 +14,12 @@ peer:
   gossip:
     bootstrap: peer2-hlf-peer.org2:7051
     endpoint: peer1-hlf-peer.org2:7051
+  chaincodes:
+    - name: fabcar
+      address: chaincode1-hlf-chaincode:7777
+      label: fabcar
+      orderer_address: orderer1.orderer.localhost:443
+      channel: star
 
 # Secrets references, empty by default, fill in with your secrets (particularly adminCert) or add Peer Admin certificate manually after launching chart.
 secrets:

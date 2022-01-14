@@ -95,6 +95,11 @@ peer:
   docker:
     enabled: false
 
+  # a list of external chaincodes to connect to
+  chaincodes:
+    # - address: peer1-chaincode:7777
+    #   label: foo
+
 # Secrets references, empty by default, fill in with your secrets (particularly adminCert) or add Peer Admin certificate manually after launching chart.
 secrets:
   ## These secrets should contain the Orderer crypto materials and credentials
