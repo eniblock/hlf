@@ -3,12 +3,12 @@
     {
       "Name": "namespace",
       "ExtensionRegistry": "https://github.com/tilt-dev/tilt-extensions",
-      "TimeFetched": "2021-10-21T15:19:16.996075901+02:00"
+      "TimeFetched": "2022-01-24T19:59:05.699447214+01:00"
     },
     {
       "Name": "kubectl_build",
       "ExtensionRegistry": "https://github.com/tilt-dev/tilt-extensions",
-      "TimeFetched": "2021-10-21T15:19:18.391950731+02:00"
+      "TimeFetched": "2022-01-24T19:59:08.438520685+01:00"
     }
   ]
 }
