@@ -5,6 +5,7 @@ metadata:
   namespace: {{ .Release.Namespace }}
   labels:
     {{- include "hlf-peer.labels" . | nindent 4 }}
+    app.kubernetes.io/component: peer
   annotations:
     reloader.stakater.com/auto: "true"
 spec:
@@ -12,6 +13,7 @@ spec:
   selector:
     matchLabels:
       {{- include "hlf-peer.selectorLabels" . | nindent 6 }}
+      app.kubernetes.io/component: peer
   # Ensure we allow our pod to be unavailable, so we can upgrade
   strategy:
     rollingUpdate:
@@ -28,6 +30,7 @@ spec:
         {{- toYaml . | nindent 8 }}
         {{- end }}
         hlf-peer-msp-id: {{ .Values.peer.mspID | quote }}
+        app.kubernetes.io/component: peer
     spec:
       {{- with .Values.image.pullSecrets }}
       imagePullSecrets:

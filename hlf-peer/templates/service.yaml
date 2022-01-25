@@ -5,6 +5,7 @@ metadata:
   namespace: {{ .Release.Namespace }}
   labels:
     {{- include "hlf-peer.labels" . | nindent 4 }}
+    app.kubernetes.io/component: peer
 spec:
   type: {{ .Values.service.type }}
   ports:
@@ -24,3 +25,4 @@ spec:
     {{- end }}
   selector:
     {{- include "hlf-peer.selectorLabels" . | nindent 4 }}
+    app.kubernetes.io/component: peer
