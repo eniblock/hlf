@@ -61,6 +61,7 @@ spec:
               if ! peer lifecycle chaincode queryinstalled | grep -q {{ $chaincode.name }}:$ccid; then
                   peer lifecycle chaincode install /tmp/chaincode.tar.gz
               fi
+              sleep `echo $(( RANDOM % 10 ))`
               if ! peer lifecycle chaincode queryapproved --channelID {{ $chaincode.channel }} --name {{ $chaincode.name }}; then
                   peer lifecycle chaincode approveformyorg -o {{ $chaincode.orderer_address }} --channelID {{ $chaincode.channel }} --name {{ $chaincode.name }} --version 1 --package-id {{ $chaincode.name }}:$CCID --sequence 1 --tls --cafile /var/hyperledger/tls/ord/cert/cacert.pem
               fi
