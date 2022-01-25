@@ -24,6 +24,10 @@ import (
 	"encoding/json"
 	"fmt"
 	"os"
+	"os/exec"
+	"path/filepath"
+	"strings"
+	"syscall"
 	"time"
 
 	"github.com/apex/log"
@@ -42,7 +46,7 @@ var rootCmd = &cobra.Command{
 	// Long: ``,
 	// Uncomment the following line if your bare application
 	// has an action associated with it:
-	Args: cobra.ExactArgs(2),
+	Args: cobra.MinimumNArgs(1),
 	Run:  mainRun,
 }
 
@@ -60,12 +64,22 @@ type Metadata struct {
 
 func mainRun(cmd *cobra.Command, args []string) {
 	address := args[0]
-	label := args[1]
+	command := args[1:]
+	label, err := cmd.Flags().GetString("label")
+	if err != nil {
+		log.WithError(err).Fatal("Getting flag 'label' failed")
+	}
+	name, err := cmd.Flags().GetString("name")
+	if err != nil {
+		log.WithError(err).Fatal("Getting flag 'name' failed")
+	}
 	tarBytes := generateTar(address, label)
+	shaSum := sha256.Sum256(tarBytes)
+	shaSumStr := hex.EncodeToString(shaSum[:])
 	// save the final tar, if needed
 	output, err := cmd.Flags().GetString("output")
 	if err != nil {
-		log.WithError(err).Fatal("Getting flag 'retention' failed")
+		log.WithError(err).Fatal("Getting flag 'output' failed")
 	}
 	if output != "" {
 		err := os.WriteFile(output, tarBytes, 0644)
@@ -73,9 +87,60 @@ func mainRun(cmd *cobra.Command, args []string) {
 			log.WithError(err).Fatal("Can't write final tar")
 		}
 	}
-	// show the sha256 of the tar
-	shaSum := sha256.Sum256(tarBytes)
-	fmt.Println(hex.EncodeToString(shaSum[:]))
+
+	if len(command) > 0 {
+		env := getEnv()
+		if name != "" {
+			env["CCID"] = name + ":" + shaSumStr
+			env["CHAINCODE_ID"] = env["CCID"]
+			env["CHAINCODE_CCID"] = env["CCID"]
+			log.Info("ccid: " + env["CCID"])
+		}
+		env["CHAINCODE_NAME"] = name
+		env["CHAINCODE_LABEL"] = label
+		env["CHAINCODE_CONNECTION_ADDRESS"] = address
+		addressSplit := strings.SplitN(address, ":", 2)
+		if len(addressSplit) == 2 {
+			env["CHAINCODE_HOST"] = addressSplit[0]
+			env["CHAINCODE_PORT"] = addressSplit[1]
+		}
+		execPath := command[0]
+		if !filepath.IsAbs(execPath) {
+			execPath, err = exec.LookPath(command[0])
+			if err != nil {
+				log.WithError(err).Fatal("Can't find the command in the PATH")
+			}
+		}
+		err := syscall.Exec(execPath, command, envToList(env))
+		// we should never get there, unless we can even run the command
+		if err != nil {
+			log.WithError(err).Fatal("Can't run the command")
+		}
+	} else {
+		if name != "" {
+			fmt.Println(name + ":" + shaSumStr)
+		} else {
+			// show the sha256 of the tar
+			fmt.Println(shaSumStr)
+		}
+	}
+}
+
+func getEnv() map[string]string {
+	env := make(map[string]string)
+	for _, item := range os.Environ() {
+		splits := strings.SplitN(item, "=", 2)
+		env[splits[0]] = splits[1]
+	}
+	return env
+}
+
+func envToList(env map[string]string) []string {
+	res := []string{}
+	for key, value := range env {
+		res = append(res, key+"="+value)
+	}
+	return res
 }
 
 func generateTar(address string, label string) []byte {
@@ -179,6 +244,8 @@ func Execute() {
 
 func init() {
 	cobra.OnInitialize(initConfig)
+	rootCmd.Flags().StringP("label", "l", "", "Labels of the external chaincode")
+	rootCmd.Flags().StringP("name", "n", "", "External chaincode name")
 	rootCmd.Flags().StringP("output", "o", "", "Output path for the final tar")
 }
 
