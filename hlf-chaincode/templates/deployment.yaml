@@ -52,6 +52,8 @@ spec:
           env:
             - name: CHAINCODE_ADDRESS
               value: 0.0.0.0:{{ .Values.port }}
+            - name: CORE_PEER_LOCALMSPID
+              value: {{ .Values.mspid | required "Please provide a mspid value" | quote }}
             {{- if .Values.ccid }}
             - name: CHAINCODE_ID
               value: {{ .Values.ccid | quote }}

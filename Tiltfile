@@ -91,7 +91,7 @@ for org in ['org1', 'org2']:
         helm(
             'hlf-chaincode',
             namespace=org,
-            values=['hlf-chaincode/values-dev.yaml'],
+            values=['hlf-chaincode/values-' + org + '.yaml'],
             name='chaincode1',
         )
     )

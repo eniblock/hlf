@@ -11,6 +11,7 @@ image:
 # command:
 # name:
 port: 7777
+mspid: null
 
 service:
   # Cluster IP or LoadBalancer

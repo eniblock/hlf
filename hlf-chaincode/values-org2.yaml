@@ -1,3 +1,4 @@
+mspid: org2
 name: fabcar
 command:
   - /chaincode
