@@ -65,6 +65,19 @@ spec:
               if ! peer lifecycle chaincode queryapproved --channelID {{ $chaincode.channel }} --name {{ $chaincode.name }}; then
                   peer lifecycle chaincode approveformyorg -o {{ $chaincode.orderer_address }} --channelID {{ $chaincode.channel }} --name {{ $chaincode.name }} --version 1 --package-id $ccid --sequence 1 --tls --cafile /var/hyperledger/tls/ord/cert/cacert.pem
               fi
+              while [ `peer lifecycle chaincode checkcommitreadiness -o {{ $chaincode.orderer_address }} --channelID {{ $chaincode.channel }} --name {{ $chaincode.name }} --version 1 --sequence 1 --tls --cafile /var/hyperledger/tls/ord/cert/cacert.pem | grep -E ': false$' | wc -l` != "0" ] ; do
+                  echo Waiting for all organizations to be ready to commit
+                  sleep 3
+              done
+              if ! peer lifecycle chaincode querycommitted --channelID {{ $chaincode.channel }} --name {{ $chaincode.name }} ; then
+                  # sleep a random time, to avoid having all the peers creating the channel at once
+                  sleep `echo $(( RANDOM % 10 ))`
+                  if ! peer lifecycle chaincode querycommitted --channelID {{ $chaincode.channel }} --name {{ $chaincode.name }} ; then
+                      peer lifecycle chaincode commit -o {{ $chaincode.orderer_address }} --channelID {{ $chaincode.channel }} --name {{ $chaincode.name }} --version 1 --sequence 1 --tls --cafile /var/hyperledger/tls/ord/cert/cacert.pem
+                  else
+                      echo chaincode {{ $chaincode.name }} already commited
+                  fi
+              fi
           volumeMounts:
             - name: ccid
               mountPath: /var/hyperledger/fabric/chaincode/ccid/bin
