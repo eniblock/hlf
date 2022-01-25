@@ -52,18 +52,18 @@ spec:
             - -c
             - |
               set -ex
-              ccid=`/var/hyperledger/fabric/chaincode/ccid/bin/ccid {{ $chaincode.address }} {{ $chaincode.label }} -o /tmp/chaincode.tar.gz`
-              echo chaincode package id: {{ $chaincode.name }}:$ccid
+              ccid=`/var/hyperledger/fabric/chaincode/ccid/bin/ccid {{ $chaincode.address }} {{ if ne ($chaincode.label | default "") "" }}-l {{ $chaincode.label }}{{ end }} -n {{ $chaincode.name }} -o /tmp/chaincode.tar.gz`
+              echo chaincode package id: $ccid
               while ! peer channel list | grep -qE '^{{ $chaincode.channel }}$'; do
                   echo Waiting for peer to join {{ $chaincode.channel }} channel
                   sleep 3
               done
-              if ! peer lifecycle chaincode queryinstalled | grep -q {{ $chaincode.name }}:$ccid; then
+              if ! peer lifecycle chaincode queryinstalled | grep -q $ccid; then
                   peer lifecycle chaincode install /tmp/chaincode.tar.gz
               fi
               sleep `echo $(( RANDOM % 10 ))`
               if ! peer lifecycle chaincode queryapproved --channelID {{ $chaincode.channel }} --name {{ $chaincode.name }}; then
-                  peer lifecycle chaincode approveformyorg -o {{ $chaincode.orderer_address }} --channelID {{ $chaincode.channel }} --name {{ $chaincode.name }} --version 1 --package-id {{ $chaincode.name }}:$CCID --sequence 1 --tls --cafile /var/hyperledger/tls/ord/cert/cacert.pem
+                  peer lifecycle chaincode approveformyorg -o {{ $chaincode.orderer_address }} --channelID {{ $chaincode.channel }} --name {{ $chaincode.name }} --version 1 --package-id $ccid --sequence 1 --tls --cafile /var/hyperledger/tls/ord/cert/cacert.pem
               fi
           volumeMounts:
             - name: ccid

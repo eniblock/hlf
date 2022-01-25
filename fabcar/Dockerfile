@@ -42,6 +42,8 @@ COPY --from=base /etc/passwd /etc/group /etc/shadow /etc/
 
 COPY --from=grpc_health_probe /bin/grpc_health_probe /bin/grpc_health_probe
 
+COPY --from=registry.gitlab.com/xdev-tech/xdev-enterprise-business-network/hlf-k8s/ccid:develop /ccid /ccid
+
 COPY --from=build /go/src/github.com/fabcar/chaincode /chaincode
 
 USER app

@@ -31,16 +31,35 @@ spec:
       securityContext:
         {{- toYaml .Values.podSecurityContext | nindent 8 }}
       containers:
-        - image: "{{ .Values.image.repository | required "please provide a ccid value" }}{{ if .Values.image.tag }}:{{ .Values.image.tag }}{{ end }}"
+        - image: "{{ .Values.image.repository | required "please provide a image.repository value" }}{{ if .Values.image.tag }}:{{ .Values.image.tag }}{{ end }}"
           name: {{ include "hlf-chaincode.fullname" . }}
           imagePullPolicy: {{ .Values.image.pullPolicy }}
+          {{- if .Values.command }}
+          command:
+            - /ccid
+            - {{ include "hlf-chaincode.fullname" . }}:{{ .Values.service.port }}
+            {{- if .Values.name }}
+            - --name
+            - {{ .Values.name | quote }}
+            {{- end }}
+            {{- if .Values.label }}
+            - --label
+            - {{ .Values.label | quote }}
+            {{- end }}
+            - --
+            {{- .Values.command | toYaml | nindent 12 }}
+          {{- end }}
           env:
-            - name: CHAINCODE_CCID
-              value: {{ .Values.ccid | required "please provide a ccid value" | quote }}
             - name: CHAINCODE_ADDRESS
-              value: "0.0.0.0:7052"
+              value: 0.0.0.0:{{ .Values.port }}
+            {{- if .Values.ccid }}
+            - name: CHAINCODE_ID
+              value: {{ .Values.ccid | quote }}
+            - name: CHAINCODE_CCID
+              value: {{ .Values.ccid | quote }}
+            {{- end }}
           ports:
-            - containerPort: 7052
+            - containerPort: {{ .Values.port }}
           # readinessProbe:
           #   exec:
           #     command: ["/bin/grpc_health_probe", "-tls", "-tls-no-verify", "-addr=:7052"]

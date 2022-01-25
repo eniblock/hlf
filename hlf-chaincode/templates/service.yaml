@@ -9,7 +9,7 @@ spec:
   type: {{ .Values.service.type }}
   ports:
     - port: {{ .Values.service.port }}
-      targetPort: 7052
+      targetPort: {{ .Values.service.port }}
       protocol: TCP
       name: grpc
   selector:
