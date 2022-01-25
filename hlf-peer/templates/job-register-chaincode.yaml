@@ -3,7 +3,7 @@
 apiVersion: batch/v1
 kind: Job
 metadata:
-  name: {{ include "hlf-peer.fullname" $ }}-rc-{{ regexReplaceAll "\\W+" ($chaincode.address) "-" }}
+  name: {{ include "hlf-peer.fullname" $ }}-rc-{{ regexReplaceAll "\\W+" ($chaincode.name) "-" }}
   namespace: {{ $.Release.Namespace }}
   labels:
     {{- include "hlf-peer.labels" $ | nindent 4 }}
