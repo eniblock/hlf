@@ -1,0 +1,20 @@
+{{- if .Values.couchdb.enabled }}
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ include "hlf-peer.fullname" . }}-couchdb
+  namespace: {{ .Release.Namespace }}
+  labels:
+    {{- include "hlf-peer.labels" . | nindent 4 }}
+    app.kubernetes.io/component: couchdb
+spec:
+  type: ClusterIP
+  ports:
+    - port: 5984
+      targetPort: 5984
+      protocol: TCP
+      name: api
+  selector:
+    {{- include "hlf-peer.selectorLabels" . | nindent 4 }}
+    app.kubernetes.io/component: couchdb
+{{- end }}

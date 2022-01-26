@@ -1,0 +1,69 @@
+{{- if .Values.couchdb.enabled }}
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: {{ include "hlf-peer.fullname" . }}-couchdb
+  namespace: {{ .Release.Namespace }}
+  labels:
+    {{- include "hlf-peer.labels" . | nindent 4 }}
+    app.kubernetes.io/component: couchdb
+  annotations:
+    reloader.stakater.com/auto: "true"
+spec:
+  serviceName: {{ include "hlf-peer.fullname" . }}-couchdb
+  selector:
+    matchLabels:
+      {{- include "hlf-peer.selectorLabels" . | nindent 6 }}
+      app.kubernetes.io/component: couchdb
+  template:
+    metadata:
+      labels:
+        {{- include "hlf-peer.selectorLabels" . | nindent 8 }}
+        app.kubernetes.io/component: couchdb
+    spec:
+      serviceAccountName: {{ include "hlf-peer.serviceAccountName" . }}
+      containers:
+        - name: hlf-peer
+          image: "{{ .Values.couchdb.image.repository }}:{{ .Values.couchdb.image.tag | default .Chart.AppVersion }}"
+          imagePullPolicy: {{ .Values.couchdb.image.pullPolicy }}
+          args:
+          ports:
+            - name: api
+              containerPort: 5984
+              protocol: TCP
+          envFrom:
+            - secretRef:
+                name: {{ include "hlf-peer.fullname" . }}-couchdb
+          # env:
+          livenessProbe:
+            tcpSocket:
+              port: api
+          readinessProbe:
+            tcpSocket:
+              port: api
+          resources:
+            {{- toYaml .Values.couchdb.resources | nindent 12 }}
+          volumeMounts:
+            - name: hlf-peer-storage
+              mountPath: /opt/couchdb/data
+      {{- with .Values.couchdb.affinity }}
+      affinity:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.couchdb.tolerations }}
+      tolerations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+  volumeClaimTemplates:
+    - metadata:
+        name: hlf-peer-storage
+      spec:
+        accessModes:
+          - {{ .Values.couchdb.persistence.accessMode | quote }}
+        resources:
+          requests:
+            storage: {{ .Values.couchdb.persistence.size | quote }}
+        {{- if .Values.couchdb.persistence.storageClass }}
+        storageClassName: {{ .Values.couchdb.persistence.storageClass }}
+        {{- end }}
+{{- end }}

@@ -81,6 +81,7 @@ for org in ['org1', 'org2']:
             )
         )
         k8s_resource(peer + '-hlf-peer:deployment:' + org, labels=[org])
+        k8s_resource(peer + '-hlf-peer-couchdb:statefulset:' + org, labels=[org])
         k8s_resource(peer + '-hlf-peer-jc-star:job:' + org, labels=[org])
         k8s_resource(peer + '-hlf-peer-rc-fabcar:job:' + org, labels=[org])
         if config.tilt_subcommand == 'up':

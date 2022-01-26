@@ -7,6 +7,7 @@ metadata:
   namespace: {{ .Release.Namespace }}
   labels:
     {{- include "hlf-peer.labels" . | nindent 4 }}
+    app.kubernetes.io/component: peer
   annotations:
     {{- if .Values.peer.tls.server.enabled }}
     nginx.ingress.kubernetes.io/backend-protocol: "GRPCS"

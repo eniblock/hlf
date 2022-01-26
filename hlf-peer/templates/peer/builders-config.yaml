@@ -5,6 +5,7 @@ metadata:
   namespace: {{ .Release.Namespace }}
   labels:
     {{- include "hlf-peer.labels" . | nindent 4 }}
+    app.kubernetes.io/component: peer
 data:
   core.yaml: |-
     {{- .Files.Get "core.yaml" | nindent 4 }}

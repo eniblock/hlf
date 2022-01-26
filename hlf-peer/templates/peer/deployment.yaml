@@ -31,6 +31,7 @@ spec:
         {{- end }}
         hlf-peer-msp-id: {{ .Values.peer.mspID | quote }}
         app.kubernetes.io/component: peer
+        {{ include "hlf-peer.fullname" . }}-couchdb-client: "true"
     spec:
       {{- with .Values.image.pullSecrets }}
       imagePullSecrets:
@@ -222,12 +223,12 @@ spec:
               echo -e ">\033[0;35m peer node start \033[0m"
               exec peer node start
           envFrom:
-            {{- if eq .Values.peer.databaseType "CouchDB" }}
-            - secretRef:
-                name: {{ .Values.peer.couchdbSecret }}
-            {{- end }}
             - configMapRef:
                 name: {{ include "hlf-peer.fullname" . }}
+            {{- if .Values.couchdb.enabled }}
+            - secretRef:
+                name: {{ include "hlf-peer.fullname" . }}-couchdb
+            {{- end }}
           volumeMounts:
             - mountPath: /var/hyperledger
               name: data
@@ -322,16 +323,14 @@ spec:
     {{- with .Values.affinity }}
       affinity:
         ## This affinity is required to ensure reasonable ledger access speeds
-        {{- if eq $.Values.peer.databaseType "CouchDB" }}
+        {{- if .Values.couchdb.enabled }}
         podAffinity:
           requiredDuringSchedulingIgnoredDuringExecution:
-          - labelSelector:
-              matchExpressions:
-              - key: release
-                operator: In
-                values:
-                - {{ $.Values.peer.couchdbInstance }}
-            topologyKey: "kubernetes.io/hostname"
+            - labelSelector:
+                matchLabels:
+                  app.kubernetes.io/name: hlf-peer
+                  app.kubernetes.io/instance: {{ .Release.Name }}
+              topologyKey: kubernetes.io/hostname
         {{- end }}
 {{ toYaml . | indent 8 }}
     {{- end }}

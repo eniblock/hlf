@@ -1,22 +1,22 @@
+{{- if .Values.couchdb.enabled }}
 {{- if .Values.networkPolicy.enabled }}
 kind: NetworkPolicy
 apiVersion: networking.k8s.io/v1
 metadata:
-  name: {{ include "hlf-peer.fullname" . }}
+  name: {{ include "hlf-peer.fullname" . }}-couchdb
   namespace: {{ .Release.Namespace }}
   labels:
     {{- include "hlf-peer.labels" . | nindent 4 }}
+    app.kubernetes.io/component: couchdb
 spec:
   podSelector:
     matchLabels:
       {{- include "hlf-peer.selectorLabels" . | nindent 6 }}
+      app.kubernetes.io/component: couchdb
   ingress:
     - from:
         - podSelector:
             matchLabels:
-              {{ include "hlf-peer.fullname" . }}-client: "true"
-        - podSelector:
-            matchLabels:
-              hlf-peer-msp-id: {{ .Values.peer.mspID | quote }}
-        {{- .Values.ingress.from | toYaml | nindent 8 }}
+              {{ include "hlf-peer.fullname" . }}-couchdb-client: "true"
+{{- end }}
 {{- end }}

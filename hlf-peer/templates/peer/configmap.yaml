@@ -5,6 +5,7 @@ metadata:
   namespace: {{ .Release.Namespace }}
   labels:
     {{- include "hlf-peer.labels" . | nindent 4 }}
+    app.kubernetes.io/component: peer
 data:
   CORE_PEER_ADDRESSAUTODETECT: "true"
   CORE_PEER_ID: {{ .Release.Name }}
@@ -76,10 +77,12 @@ data:
   {{- if .Values.peer.docker.enabled }}
   CORE_VM_ENDPOINT: unix:///host/var/run/docker.sock
   {{- end}}
-  CORE_LEDGER_STATE_STATEDATABASE: {{ .Values.peer.databaseType | quote }}
   # Containers in the same pod share the host
-  {{- if eq .Values.peer.databaseType "CouchDB" }}
-  CORE_LEDGER_STATE_COUCHDBCONFIG_COUCHDBADDRESS: {{ .Values.peer.couchdbInstance }}-hlf-couchdb:5984
+  {{- if .Values.couchdb.enabled }}
+  CORE_LEDGER_STATE_STATEDATABASE: CouchDB
+  CORE_LEDGER_STATE_COUCHDBCONFIG_COUCHDBADDRESS: {{ include "hlf-peer.fullname" . }}-couchdb:5984
+  {{- else }}
+  CORE_LEDGER_STATE_STATEDATABASE: LevelDB
   {{- end }}
   PEER_CFG_PATH: /var/hyperledger/config
   FABRIC_CFG_PATH: /var/hyperledger/fabric_cfg
