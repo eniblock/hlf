@@ -11,6 +11,7 @@ metadata:
   annotations:
     reloader.stakater.com/auto: "true"
 spec:
+  backoffLimit: 100
   template:
     metadata:
       labels:
