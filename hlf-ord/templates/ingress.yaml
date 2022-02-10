@@ -9,7 +9,7 @@ metadata:
     {{- include "hlf-ord.labels" . | nindent 4 }}
   annotations:
     {{- if .Values.ord.tls.server.enabled }}
-    nginx.ingress.kubernetes.io/backend-protocol: "GRPCS"
+    nginx.ingress.kubernetes.io/ssl-passthrough: "true"
     {{- else }}
     nginx.ingress.kubernetes.io/backend-protocol: "GRPC"
     {{- end }}
