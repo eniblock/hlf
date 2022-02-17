@@ -15,4 +15,7 @@ spec:
         - podSelector:
             matchLabels:
               {{ include "hlf-chaincode.fullname" . }}-client: "true"
+        - podSelector:
+            matchLabels:
+              hlf-peer-msp-id: {{ .Values.mspid }}
 {{- end }}
