@@ -56,7 +56,7 @@ serviceAccount:
 podAnnotations: {}
 
 networkPolicy:
-  enabled: false
+  enabled: true
 
 podSecurityContext: {}
 # fsGroup: 2000
