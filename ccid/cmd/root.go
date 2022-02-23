@@ -73,7 +73,11 @@ func mainRun(cmd *cobra.Command, args []string) {
 	if err != nil {
 		log.WithError(err).Fatal("Getting flag 'name' failed")
 	}
-	tarBytes := generateTar(address, label)
+	meta, err := cmd.Flags().GetString("meta")
+	if err != nil {
+		log.WithError(err).Fatal("Getting flag 'meta' failed")
+	}
+	tarBytes := generateTar(address, label, meta)
 	shaSum := sha256.Sum256(tarBytes)
 	shaSumStr := hex.EncodeToString(shaSum[:])
 	// save the final tar, if needed
@@ -143,7 +147,7 @@ func envToList(env map[string]string) []string {
 	return res
 }
 
-func generateTar(address string, label string) []byte {
+func generateTar(address string, label string, meta string) []byte {
 	metadata := Metadata{
 		Path:  "",
 		Type:  "external",
@@ -182,6 +186,7 @@ func generateTar(address string, label string) []byte {
 		if _, err := tw.Write(connectionBytes); err != nil {
 			log.WithError(err).Fatal("Can't add connection.json content")
 		}
+		AddMeta(tw, meta)
 		if err := tw.Close(); err != nil {
 			log.WithError(err).Fatal("Can't generate code.tar.gz")
 		}
@@ -236,6 +241,45 @@ func generateTar(address string, label string) []byte {
 	return tarBuf.Bytes()
 }
 
+func AddMeta(tw *tar.Writer, meta string) error {
+	if meta == "" {
+		return nil
+	}
+	return filepath.Walk(meta,
+		func(path string, info os.FileInfo, err error) error {
+			if err != nil {
+				return err
+			}
+			if !info.IsDir() {
+				relPath, err := filepath.Rel(meta, path)
+				if err != nil {
+					return err
+				}
+				metaPath := "META-INF/" + relPath
+				data, err := os.ReadFile(path)
+				if err != nil {
+					return err
+				}
+				if err := tw.WriteHeader(&tar.Header{
+					Name:       metaPath,
+					Mode:       0600,
+					Size:       int64(len(data)),
+					Uid:        0,
+					Gid:        0,
+					ModTime:    time.Unix(0, 0),
+					AccessTime: time.Unix(0, 0),
+					ChangeTime: time.Unix(0, 0),
+				}); err != nil {
+					return err
+				}
+				if _, err := tw.Write(data); err != nil {
+					return err
+				}
+			}
+			return nil
+		})
+}
+
 // Execute adds all child commands to the root command and sets flags appropriately.
 // This is called by main.main(). It only needs to happen once to the rootCmd.
 func Execute() {
@@ -247,6 +291,7 @@ func init() {
 	rootCmd.Flags().StringP("label", "l", "", "Labels of the external chaincode")
 	rootCmd.Flags().StringP("name", "n", "", "External chaincode name")
 	rootCmd.Flags().StringP("output", "o", "", "Output path for the final tar")
+	rootCmd.Flags().StringP("meta", "m", "", "META-INF directory to copy")
 }
 
 // initConfig reads in config file and ENV variables if set.
