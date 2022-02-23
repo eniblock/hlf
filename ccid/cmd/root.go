@@ -171,21 +171,7 @@ func generateTar(address string, label string, meta string) []byte {
 	{
 		gw := gzip.NewWriter(&codeBuf)
 		tw := tar.NewWriter(gw)
-		if err := tw.WriteHeader(&tar.Header{
-			Name:       "connection.json",
-			Mode:       0600,
-			Size:       int64(len(connectionBytes)),
-			Uid:        0,
-			Gid:        0,
-			ModTime:    time.Unix(0, 0),
-			AccessTime: time.Unix(0, 0),
-			ChangeTime: time.Unix(0, 0),
-		}); err != nil {
-			log.WithError(err).Fatal("Can't add connection.json header")
-		}
-		if _, err := tw.Write(connectionBytes); err != nil {
-			log.WithError(err).Fatal("Can't add connection.json content")
-		}
+		addFileAtEpoch(tw, "connection.json", connectionBytes)
 		AddMeta(tw, meta)
 		if err := tw.Close(); err != nil {
 			log.WithError(err).Fatal("Can't generate code.tar.gz")
@@ -199,38 +185,8 @@ func generateTar(address string, label string, meta string) []byte {
 	{
 		gw := gzip.NewWriter(&tarBuf)
 		tw := tar.NewWriter(gw)
-		// add code.tar.gz
-		if err := tw.WriteHeader(&tar.Header{
-			Name:       "code.tar.gz",
-			Mode:       0600,
-			Size:       int64(codeBuf.Len()),
-			Uid:        0,
-			Gid:        0,
-			ModTime:    time.Unix(0, 0),
-			AccessTime: time.Unix(0, 0),
-			ChangeTime: time.Unix(0, 0),
-		}); err != nil {
-			log.WithError(err).Fatal("Can't add code.tar.gz header")
-		}
-		if _, err := tw.Write(codeBuf.Bytes()); err != nil {
-			log.WithError(err).Fatal("Can't add code.tar.gz content")
-		}
-		// add metadata.json
-		if err := tw.WriteHeader(&tar.Header{
-			Name:       "metadata.json",
-			Mode:       0600,
-			Size:       int64(len(metadataBytes)),
-			Uid:        0,
-			Gid:        0,
-			ModTime:    time.Unix(0, 0),
-			AccessTime: time.Unix(0, 0),
-			ChangeTime: time.Unix(0, 0),
-		}); err != nil {
-			log.WithError(err).Fatal("Can't add metadata.json header")
-		}
-		if _, err := tw.Write(metadataBytes); err != nil {
-			log.WithError(err).Fatal("Can't add metadata.json content")
-		}
+		addFileAtEpoch(tw, "code.tar.gz", codeBuf.Bytes())
+		addFileAtEpoch(tw, "metadata.json", metadataBytes)
 		if err := tw.Close(); err != nil {
 			log.WithError(err).Fatal("Can't generate final tar")
 		}
@@ -241,43 +197,47 @@ func generateTar(address string, label string, meta string) []byte {
 	return tarBuf.Bytes()
 }
 
-func AddMeta(tw *tar.Writer, meta string) error {
+func AddMeta(tw *tar.Writer, meta string) {
 	if meta == "" {
-		return nil
+		return
 	}
-	return filepath.Walk(meta,
+	filepath.Walk(meta,
 		func(path string, info os.FileInfo, err error) error {
 			if err != nil {
-				return err
+				log.WithError(err).Fatal("Can't walk the meta directory")
 			}
 			if !info.IsDir() {
 				relPath, err := filepath.Rel(meta, path)
-				if err != nil {
+				if err != nil { // can't really happen
 					return err
 				}
 				metaPath := "META-INF/" + relPath
 				data, err := os.ReadFile(path)
 				if err != nil {
-					return err
+					log.WithError(err).Fatal("Can't read " + path)
 				}
-				if err := tw.WriteHeader(&tar.Header{
-					Name:       metaPath,
-					Mode:       0600,
-					Size:       int64(len(data)),
-					Uid:        0,
-					Gid:        0,
-					ModTime:    time.Unix(0, 0),
-					AccessTime: time.Unix(0, 0),
-					ChangeTime: time.Unix(0, 0),
-				}); err != nil {
-					return err
-				}
-				if _, err := tw.Write(data); err != nil {
-					return err
-				}
+				addFileAtEpoch(tw, metaPath, data)
 			}
 			return nil
 		})
+}
+
+func addFileAtEpoch(tw *tar.Writer, path string, data []byte) {
+	if err := tw.WriteHeader(&tar.Header{
+		Name:       path,
+		Mode:       0600,
+		Size:       int64(len(data)),
+		Uid:        0,
+		Gid:        0,
+		ModTime:    time.Unix(0, 0),
+		AccessTime: time.Unix(0, 0),
+		ChangeTime: time.Unix(0, 0),
+	}); err != nil {
+		log.WithError(err).Fatal("Can't add " + path + " header")
+	}
+	if _, err := tw.Write(data); err != nil {
+		log.WithError(err).Fatal("Can't add " + path + " content")
+	}
 }
 
 // Execute adds all child commands to the root command and sets flags appropriately.
