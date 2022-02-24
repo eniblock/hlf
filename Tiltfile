@@ -99,10 +99,10 @@ image_build(
 #### lint ####
 
 local_resource('ord lint',
-               'docker run --rm -t -v $PWD:/app registry.gitlab.com/xdev-tech/build/helm:develop' +
+               'docker run --rm -t -v $PWD:/app registry.gitlab.com/xdev-tech/build/helm:2.2' +
                ' lint hlf-ord --values hlf-ord/values-orderer1.yaml',
                'hlf-ord/', allow_parallel=True)
 local_resource('peer lint',
-               'docker run --rm -t -v $PWD:/app registry.gitlab.com/xdev-tech/build/helm:develop' +
+               'docker run --rm -t -v $PWD:/app registry.gitlab.com/xdev-tech/build/helm:2.2' +
                ' lint hlf-peer --values hlf-peer/values-org2-peer2.yaml',
                'hlf-peer/', allow_parallel=True)
