@@ -39,7 +39,7 @@ helm-peer:
   stage: helm
   image: registry.gitlab.com/xdev-tech/build/helm:2.2
   script:
-    - build_std ./hlf-peer "NO_PATCH .ccid.image.tag"
+    - build_std ./hlf-peer NO_PATCH
 
 helm-chaincode:
   stage: helm

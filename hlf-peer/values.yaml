@@ -232,8 +232,3 @@ securityContext: {}
   # readOnlyRootFilesystem: true
   # runAsNonRoot: true
 # runAsUser: 1000
-
-ccid:
-  image:
-    repository: registry.gitlab.com/xdev-tech/xdev-enterprise-business-network/hlf-k8s/ccid
-    tag: develop
