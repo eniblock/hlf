@@ -11,6 +11,7 @@ RUN adduser -s /bin/true -u 1000 -D -h /app app \
 
 # This image is a microservice in golang for the marbles chaincode
 FROM golang:1.15.8-alpine AS build
+RUN mkdir -p /META-INF/foo/bar
 
 COPY ./ /go/src/github.com/fabcar
 WORKDIR /go/src/github.com/fabcar
@@ -19,17 +20,9 @@ WORKDIR /go/src/github.com/fabcar
 RUN CGO_ENABLED=0 GOARCH=amd64 GOOS=linux go build -trimpath -ldflags '-extldflags "-static" -w -s' -o chaincode -v .
 
 
-# get
-FROM alpine:3.13 as grpc_health_probe
-RUN apk add wget
-RUN GRPC_HEALTH_PROBE_VERSION=v0.4.5 && \
-    wget -qO/bin/grpc_health_probe https://github.com/grpc-ecosystem/grpc-health-probe/releases/download/${GRPC_HEALTH_PROBE_VERSION}/grpc_health_probe-linux-amd64 && \
-    chmod +x /bin/grpc_health_probe
-
-
 # Production ready image
 # Pass the binary to the prod image
-FROM scratch
+FROM busybox
 
 # Add the timezone data files
 COPY --from=base /usr/share/zoneinfo /usr/share/zoneinfo
@@ -40,11 +33,11 @@ COPY --from=base /etc/ssl/certs/ca-certificates.crt /etc/ssl/certs/
 # Add-in our unprivileged user
 COPY --from=base /etc/passwd /etc/group /etc/shadow /etc/
 
-COPY --from=grpc_health_probe /bin/grpc_health_probe /bin/grpc_health_probe
-
-COPY --from=registry.gitlab.com/xdev-tech/xdev-enterprise-business-network/hlf-k8s/ccid:develop /ccid /ccid
+COPY --from=registry.gitlab.com/xdev-tech/xdev-enterprise-business-network/hlf-k8s/ccid:develop.26 /ccid /ccid
 
 COPY --from=build /go/src/github.com/fabcar/chaincode /chaincode
+
+COPY --from=build /META-INF /META-INF
 
 USER app
 

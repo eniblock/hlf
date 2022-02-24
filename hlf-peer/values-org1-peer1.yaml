@@ -26,6 +26,7 @@ peer:
         repository: registry.gitlab.com/the-blockchain-xdev/xdev-sandbox/hlf/fabcar
       command:
         - /chaincode
+      metaInf: true
 
 # Secrets references, empty by default, fill in with your secrets (particularly adminCert) or add Peer Admin certificate manually after launching chart.
 secrets:

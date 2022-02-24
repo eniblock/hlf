@@ -36,6 +36,16 @@ spec:
           volumeMounts:
             - name: ccid
               mountPath: /var/hyperledger/fabric/chaincode/ccid/bin
+        {{- if $chaincode.metaInf }}
+        - name: meta-inf
+          image: "{{ $chaincode.image.repository | required "please provide a image.repository value" }}{{ if $chaincode.image.tag }}:{{ $chaincode.image.tag }}{{ end }}"
+          imagePullPolicy: {{ $chaincode.image.pullPolicy | default $.Values.image.pullPolicy }}
+          command: [sh, -c]
+          args: ["cp -r /META-INF/* /var/hyperledger/fabric/chaincode/META-INF/"]
+          volumeMounts:
+            - name: meta-inf
+              mountPath: /var/hyperledger/fabric/chaincode/META-INF
+        {{- end }}
       containers:
         - name: main
           image: hyperledger/fabric-tools:{{ $.Values.image.tag }}
@@ -58,7 +68,7 @@ spec:
             - -c
             - |
               set -ex
-              ccid=`/var/hyperledger/fabric/chaincode/ccid/bin/ccid {{ $address }} {{ if ne ($chaincode.label | default "") "" }}-l {{ $chaincode.label }}{{ end }} -n {{ $chaincode.name }} -o /tmp/chaincode.tar.gz`
+              ccid=`/var/hyperledger/fabric/chaincode/ccid/bin/ccid {{ $address }} {{ if ne ($chaincode.label | default "") "" }}-l {{ $chaincode.label }}{{ end }} {{ if $chaincode.metaInf }}-m /var/hyperledger/fabric/chaincode/META-INF {{ end }} -n {{ $chaincode.name }} -o /tmp/chaincode.tar.gz`
               echo chaincode package id: $ccid
               while ! peer channel list | grep -qE '^{{ $chaincode.channel }}$'; do
                   echo Waiting for peer to join {{ $chaincode.channel }} channel
@@ -87,6 +97,10 @@ spec:
           volumeMounts:
             - name: ccid
               mountPath: /var/hyperledger/fabric/chaincode/ccid/bin
+            {{- if $chaincode.metaInf }}
+            - name: meta-inf
+              mountPath: /var/hyperledger/fabric/chaincode/META-INF
+            {{- end }}
             {{- if $.Values.secrets.peer.cert }}
             - mountPath: /var/hyperledger/msp/signcerts
               name: id-cert
@@ -155,6 +169,10 @@ spec:
       volumes:
         - name: ccid
           emptyDir: {}
+        {{- if $chaincode.metaInf }}
+        - name: meta-inf
+          emptyDir: {}
+        {{- end}}
         {{- if $.Values.secrets.peer.cert }}
         - name: id-cert
           secret:

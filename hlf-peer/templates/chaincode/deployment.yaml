@@ -59,6 +59,10 @@ spec:
             - --label
             - {{ $chaincode.label | quote }}
             {{- end }}
+            {{- if $chaincode.metaInf }}
+            - --meta
+            - /META-INF
+            {{- end}}
             - --
             {{- $chaincode.command | toYaml | nindent 12 }}
           {{- end }}
