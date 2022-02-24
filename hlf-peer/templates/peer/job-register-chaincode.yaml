@@ -29,7 +29,7 @@ spec:
       initContainers:
         # load the chaincode id calculator into the peer image prior to peer launch.
         - name: ccid
-          image: registry.gitlab.com/xdev-tech/xdev-enterprise-business-network/hlf-k8s/ccid:develop
+          image: registry.gitlab.com/xdev-tech/xdev-enterprise-business-network/hlf-k8s/ccid:develop.27
           imagePullPolicy: IfNotPresent
           command: [sh, -c]
           args: ["cp /ccid /var/hyperledger/fabric/chaincode/ccid/bin"]
