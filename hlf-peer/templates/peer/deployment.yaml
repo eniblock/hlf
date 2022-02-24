@@ -43,7 +43,7 @@ spec:
       # load the external chaincode builder into the peer image prior to peer launch.
       initContainers:
         - name: fabric-ccs-builder
-          image: registry.gitlab.com/xdev-tech/xdev-enterprise-business-network/hlf-k8s/fabric-ccs-builder:develop
+          image: registry.gitlab.com/xdev-tech/xdev-enterprise-business-network/hlf-k8s/fabric-ccs-builder:{{ $.Chart.Version }}
           imagePullPolicy: IfNotPresent
           command: [sh, -c]
           args: ["cp /go/bin/* /var/hyperledger/fabric/chaincode/ccs-builder/bin/"]

@@ -11,7 +11,7 @@ docker-ccs-builder:
   stage: docker
   script:
     - docker login -u $CI_REGISTRY_USER -p $CI_REGISTRY_PASSWORD $CI_REGISTRY
-    - build $CI_REGISTRY_IMAGE/fabric-ccs-builder fabric-ccs-builder
+    - build_with_helm_tag $CI_REGISTRY_IMAGE/fabric-ccs-builder hlf-peer fabric-ccs-builder
 
 docker-fabcar:
   image:
@@ -27,7 +27,7 @@ docker-ccid:
   stage: docker
   script:
     - docker login -u $CI_REGISTRY_USER -p $CI_REGISTRY_PASSWORD $CI_REGISTRY
-    - build_with_pipeline_id $CI_REGISTRY_IMAGE/ccid ccid
+    - build_with_helm_tag $CI_REGISTRY_IMAGE/ccid hlf-peer ccid
 
 helm-ord:
   stage: helm
