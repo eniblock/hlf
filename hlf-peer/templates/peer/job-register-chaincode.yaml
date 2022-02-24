@@ -1,4 +1,9 @@
 {{- range $chaincode := .Values.peer.chaincodes }}
+{{- $service := $chaincode.service | default dict }}
+{{- $address := printf "%s-%s:%d" (include "hlf-peer.fullname" $) (regexReplaceAll "\\W+" ($chaincode.name) "-") ($service.port | default 7777) }}
+{{- if $chaincode.address }}
+{{ $address = $chaincode.address }}
+{{- end }}
 ---
 apiVersion: batch/v1
 kind: Job
@@ -53,7 +58,7 @@ spec:
             - -c
             - |
               set -ex
-              ccid=`/var/hyperledger/fabric/chaincode/ccid/bin/ccid {{ $chaincode.address }} {{ if ne ($chaincode.label | default "") "" }}-l {{ $chaincode.label }}{{ end }} -n {{ $chaincode.name }} -o /tmp/chaincode.tar.gz`
+              ccid=`/var/hyperledger/fabric/chaincode/ccid/bin/ccid {{ $address }} {{ if ne ($chaincode.label | default "") "" }}-l {{ $chaincode.label }}{{ end }} -n {{ $chaincode.name }} -o /tmp/chaincode.tar.gz`
               echo chaincode package id: $ccid
               while ! peer channel list | grep -qE '^{{ $chaincode.channel }}$'; do
                   echo Waiting for peer to join {{ $chaincode.channel }} channel

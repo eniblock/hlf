@@ -1,3 +1,6 @@
+global:
+  dev: true
+
 ingress:
   enabled: false
   host: peer1.org1.localhost
@@ -16,10 +19,13 @@ peer:
     endpoint: peer1-hlf-peer.org1:7051
   chaincodes:
     - name: fabcar
-      address: chaincode1-hlf-chaincode:7777
       label: fabcar
       orderer_address: orderer1.orderer.localhost:443
       channel: star
+      image:
+        repository: registry.gitlab.com/the-blockchain-xdev/xdev-sandbox/hlf/fabcar
+      command:
+        - /chaincode
 
 # Secrets references, empty by default, fill in with your secrets (particularly adminCert) or add Peer Admin certificate manually after launching chart.
 secrets:

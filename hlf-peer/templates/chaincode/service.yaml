@@ -1,0 +1,27 @@
+{{- range $chaincode := .Values.peer.chaincodes }}
+{{- if $chaincode.image }}
+{{- $name := regexReplaceAll "\\W+" ($chaincode.name) "-" }}
+{{- $service := $chaincode.service | default dict }}
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ include "hlf-peer.fullname" $ }}-{{ $name }}
+  namespace: {{ $.Release.Namespace }}
+  labels:
+    {{- include "hlf-peer.labels" $ | nindent 4 }}
+    app.kubernetes.io/component: chaincode
+    hlf-peer-chaincode: {{ $name }}
+spec:
+  type: {{ $service.type | default "ClusterIP" }}
+  ports:
+    - port: {{ $service.port | default 7777 }}
+      targetPort: rpc
+      protocol: TCP
+      name: rpc
+  selector:
+    {{- include "hlf-peer.selectorLabels" $ | nindent 4 }}
+    app.kubernetes.io/component: chaincode
+    hlf-peer-chaincode: {{ $name }}
+{{- end }}
+{{- end }}

@@ -1,0 +1,94 @@
+{{- range $chaincode := .Values.peer.chaincodes }}
+{{- if $chaincode.image }}
+{{ $name := regexReplaceAll "\\W+" ($chaincode.name) "-" }}
+{{- $service := $chaincode.service | default dict }}
+{{- $address := printf "%s-%s:%d" (include "hlf-peer.fullname" $) (regexReplaceAll "\\W+" ($chaincode.name) "-") ($service.port | default 7777) }}
+{{- if $chaincode.address }}
+{{ $address = $chaincode.address }}
+{{- end }}
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "hlf-peer.fullname" $ }}-{{ $name }}
+  namespace: {{ $.Release.Namespace }}
+  labels:
+    {{- include "hlf-peer.labels" $ | nindent 4 }}
+    app.kubernetes.io/component: chaincode
+    hlf-peer-chaincode: {{ $name }}
+  annotations:
+    reloader.stakater.com/auto: "true"
+spec:
+  replicas: {{ $.Values.replicaCount }}
+  selector:
+    matchLabels:
+      {{- include "hlf-peer.selectorLabels" $ | nindent 6 }}
+      app.kubernetes.io/component: chaincode
+      hlf-peer-chaincode: {{ $name }}
+  template:
+    metadata:
+      {{- with $.Values.podAnnotations }}
+      annotations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      labels:
+        {{- include "hlf-peer.selectorLabels" $ | nindent 8 }}
+        app.kubernetes.io/component: chaincode
+        hlf-peer-chaincode: {{ $name }}
+    spec:
+      {{- with ($chaincode.image.pullSecrets | default $.Values.image.pullSecrets) }}
+      imagePullSecrets:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      serviceAccountName: {{ include "hlf-peer.serviceAccountName" $ }}
+      securityContext:
+        {{- toYaml $.Values.podSecurityContext | nindent 8 }}
+      containers:
+        - image: "{{ $chaincode.image.repository | required "please provide a image.repository value" }}{{ if $chaincode.image.tag }}:{{ $chaincode.image.tag }}{{ end }}"
+          name: {{ $name }}
+          imagePullPolicy: {{ $chaincode.image.pullPolicy | default $.Values.image.pullPolicy }}
+          {{- if $chaincode.command }}
+          command:
+            - /ccid
+            - {{ $address }}
+            {{- if $chaincode.name }}
+            - --name
+            - {{ $chaincode.name | quote }}
+            {{- end }}
+            {{- if $chaincode.label }}
+            - --label
+            - {{ $chaincode.label | quote }}
+            {{- end }}
+            - --
+            {{- $chaincode.command | toYaml | nindent 12 }}
+          {{- end }}
+          env:
+            - name: CHAINCODE_ADDRESS
+              value: 0.0.0.0:{{ $chaincode.port | default 7777 }}
+            - name: CORE_PEER_LOCALMSPID
+              value: {{ $.Values.peer.mspID | required "Please provide a mspid value" | quote }}
+          ports:
+            - name: rpc
+              containerPort: {{ $chaincode.port | default 7777 }}
+          readinessProbe:
+            tcpSocket:
+              port: rpc
+          livenessProbe:
+            tcpSocket:
+              port: rpc
+          resources:
+{{ toYaml $chaincode.resources | indent 12 }}
+    {{- with $.Values.nodeSelector }}
+      nodeSelector:
+{{ toYaml . | indent 8 }}
+    {{- end }}
+    {{- with $.Values.affinity }}
+      affinity:
+{{ toYaml . | indent 8 }}
+    {{- end }}
+    {{- with $.Values.tolerations }}
+      tolerations:
+{{ toYaml . | indent 8 }}
+    {{- end }}
+{{- end }}
+{{- end }}

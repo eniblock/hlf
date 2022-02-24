@@ -82,23 +82,13 @@ for org in ['org1', 'org2']:
         )
         k8s_resource(peer + '-hlf-peer:deployment:' + org, labels=[org])
         k8s_resource(peer + '-hlf-peer-couchdb:statefulset:' + org, labels=[org])
+        k8s_resource(peer + '-hlf-peer-fabcar:deployment:' + org, labels=[org])
         k8s_resource(peer + '-hlf-peer-jc-star:job:' + org, labels=[org])
         k8s_resource(peer + '-hlf-peer-rc-fabcar:job:' + org, labels=[org])
         if config.tilt_subcommand == 'up':
             local(clk_k8s + 'add-domain ' + peer + '.' + org + '.localhost')
         if config.tilt_subcommand == 'down' and not cfg.get("no-volumes"):
             local('kubectl --context ' + k8s_context() + ' -n ' + org + ' delete pvc --selector=app.kubernetes.io/instance=' + peer + ' --wait=false')
-    k8s_yaml(
-        helm(
-            'hlf-chaincode',
-            namespace=org,
-            values=['hlf-chaincode/values-' + org + '.yaml'],
-            name='chaincode1',
-        )
-    )
-    k8s_resource('chaincode1-hlf-chaincode:deployment:' + org, labels=[org])
-
-# k8s_resource('chaincode1-hlf-chaincode:deployment:' + org, port_forwards=['7052:7052'])
 
 image_build(
     'registry.gitlab.com/the-blockchain-xdev/xdev-sandbox/hlf/fabcar',
@@ -116,7 +106,3 @@ local_resource('peer lint',
                'docker run --rm -t -v $PWD:/app registry.gitlab.com/xdev-tech/build/helm:develop' +
                ' lint hlf-peer --values hlf-peer/values-org2-peer2.yaml',
                'hlf-peer/', allow_parallel=True)
-local_resource('chaincode lint',
-               'docker run --rm -t -v $PWD:/app registry.gitlab.com/xdev-tech/build/helm:develop' +
-               ' lint hlf-chaincode --values hlf-chaincode/values-dev.yaml',
-               'hlf-chaincode/', allow_parallel=True)

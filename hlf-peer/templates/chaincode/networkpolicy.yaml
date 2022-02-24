@@ -1,0 +1,32 @@
+{{- if .Values.networkPolicy.enabled }}
+{{- range $chaincode := .Values.peer.chaincodes }}
+{{- if $chaincode.image }}
+{{ $name := regexReplaceAll "\\W+" ($chaincode.name) "-" }}
+---
+kind: NetworkPolicy
+apiVersion: networking.k8s.io/v1
+metadata:
+  name: {{ include "hlf-peer.fullname" $ }}-{{ $name }}
+  namespace: {{ $.Release.Namespace }}
+  labels:
+    {{- include "hlf-peer.labels" $ | nindent 4 }}
+    app.kubernetes.io/component: chaincode
+    hlf-peer-chaincode: {{ $name }}
+spec:
+  podSelector:
+    matchLabels:
+      {{- include "hlf-peer.selectorLabels" $ | nindent 6 }}
+      app.kubernetes.io/component: chaincode
+      hlf-peer-chaincode: {{ $name }}
+  ingress:
+    - from:
+        - podSelector:
+            matchLabels:
+              {{ include "hlf-peer.fullname" $ }}-{{ $name }}-client: "true"
+        - podSelector:
+            matchLabels:
+              {{- include "hlf-peer.selectorLabels" $ | nindent 14 }}
+              app.kubernetes.io/component: peer
+{{- end }}
+{{- end }}
+{{- end }}
