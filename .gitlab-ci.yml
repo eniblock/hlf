@@ -27,7 +27,7 @@ docker-ccid:
   stage: docker
   script:
     - docker login -u $CI_REGISTRY_USER -p $CI_REGISTRY_PASSWORD $CI_REGISTRY
-    - build $CI_REGISTRY_IMAGE/ccid ccid
+    - build_with_pipeline_id $CI_REGISTRY_IMAGE/ccid ccid
 
 helm-ord:
   stage: helm
