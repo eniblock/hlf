@@ -206,12 +206,16 @@ func AddMeta(tw *tar.Writer, meta string) {
 			if err != nil {
 				log.WithError(err).Fatal("Can't walk the meta directory")
 			}
-			if !info.IsDir() {
-				relPath, err := filepath.Rel(meta, path)
-				if err != nil { // can't really happen
-					return err
+			relPath, err := filepath.Rel(meta, path)
+			if err != nil { // can't really happen
+				return err
+			}
+			metaPath := "META-INF/" + relPath
+			if info.IsDir() {
+				if metaPath != "META-INF/." {
+					addDirAtEpoch(tw, metaPath)
 				}
-				metaPath := "META-INF/" + relPath
+			} else {
 				data, err := os.ReadFile(path)
 				if err != nil {
 					log.WithError(err).Fatal("Can't read " + path)
@@ -237,6 +241,21 @@ func addFileAtEpoch(tw *tar.Writer, path string, data []byte) {
 	}
 	if _, err := tw.Write(data); err != nil {
 		log.WithError(err).Fatal("Can't add " + path + " content")
+	}
+}
+
+func addDirAtEpoch(tw *tar.Writer, path string) {
+	if err := tw.WriteHeader(&tar.Header{
+		Typeflag:   tar.TypeDir,
+		Name:       path,
+		Mode:       0700,
+		Uid:        0,
+		Gid:        0,
+		ModTime:    time.Unix(0, 0),
+		AccessTime: time.Unix(0, 0),
+		ChangeTime: time.Unix(0, 0),
+	}); err != nil {
+		log.WithError(err).Fatal("Can't add " + path + " header")
 	}
 }
 
