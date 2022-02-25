@@ -42,8 +42,8 @@ spec:
         {{- toYaml .Values.podSecurityContext | nindent 8 }}
       # load the external chaincode builder into the peer image prior to peer launch.
       initContainers:
-        - name: fabric-ccs-builder
-          image: registry.gitlab.com/xdev-tech/xdev-enterprise-business-network/hlf-k8s/fabric-ccs-builder:{{ $.Chart.Version }}
+        - name: helper
+          image: registry.gitlab.com/xdev-tech/xdev-enterprise-business-network/hlf-k8s/helper:{{ $.Chart.Version }}
           imagePullPolicy: IfNotPresent
           command: [sh, -c]
           args: ["cp /go/bin/* /var/hyperledger/fabric/chaincode/ccs-builder/bin/"]

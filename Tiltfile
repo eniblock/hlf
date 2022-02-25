@@ -52,7 +52,7 @@ for orderer in ['orderer1', 'orderer2', 'orderer3']:
 
 #### peers ####
 
-image_build('registry.gitlab.com/xdev-tech/xdev-enterprise-business-network/hlf-k8s/fabric-ccs-builder', 'fabric-ccs-builder')
+image_build('registry.gitlab.com/xdev-tech/xdev-enterprise-business-network/hlf-k8s/helper', 'helper')
 image_build('registry.gitlab.com/xdev-tech/xdev-enterprise-business-network/hlf-k8s/ccid', 'ccid')
 
 for org in ['org1', 'org2']:
