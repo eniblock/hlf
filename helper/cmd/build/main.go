@@ -14,8 +14,11 @@ import (
 
 var logger = log.New(os.Stderr, "", 0)
 
-type ChaincodeMetadata struct {
-	Type string `json:"type"`
+type Metadata struct {
+	Path  string `json:"path"`
+	Type  string `json:"type"`
+	Label string `json:"label"`
+	Name  string `json:"name"`
 }
 
 type Connection struct {
@@ -52,7 +55,7 @@ func run() error {
 		return err
 	}
 
-	var metadata ChaincodeMetadata
+	var metadata Metadata
 	if err := json.Unmarshal(metadataFileContents, &metadata); err != nil {
 		return err
 	}
@@ -87,7 +90,7 @@ func run() error {
 		return err
 	}
 
-	if err := updateConnectionData(&connectionData); err != nil {
+	if err := updateConnectionData(&connectionData, &metadata); err != nil {
 		return err
 	}
 
@@ -105,7 +108,23 @@ func run() error {
 
 }
 
-func updateConnectionData(metadata *Connection) error {
-	// do nothing for the moment
+func updateConnectionData(connection *Connection, metadata *Metadata) error {
+	logger.Println("::Build - updating connection data")
+	if connection.Address == "" {
+		if baseAddr, err := getBaseAddr(); err == nil {
+			logger.Println("::Build - baseAddr: " + baseAddr)
+			logger.Println("::Build - metadata.Name: " + metadata.Name)
+			connection.Address = baseAddr + metadata.Name + ":7777"
+			logger.Println("::Build - computed address: " + connection.Address)
+		}
+	}
 	return nil
+}
+
+func getBaseAddr() (string, error) {
+	data, err := os.ReadFile("/var/hyperledger/fabric/chaincode/k8s-helper/base-address")
+	if err != nil {
+		return "", err
+	}
+	return strings.TrimSpace(string(data)), nil
 }

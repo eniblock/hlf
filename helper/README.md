@@ -34,12 +34,12 @@ docker build \
 
 ## Peer Configuration
 
-For Fabric networks running on Kubernetes, the ccs-builder image may be used by a sidecar or init container to load the external builder routines into pods running the `hyperledger/fabric-peer`.  For example, the registration of an external builder in core.yaml:
+For Fabric networks running on Kubernetes, the k8s-helper image may be used by a sidecar or init container to load the external builder routines into pods running the `hyperledger/fabric-peer`.  For example, the registration of an external builder in core.yaml:
 
 ```yaml
     externalBuilders:
-      - path: /var/hyperledger/fabric/chaincode/ccs-builder
-        name: ccs-builder
+      - path: /var/hyperledger/fabric/chaincode/k8s-helper
+        name: k8s-helper
         propagateEnvironment:
           - HOME
           - CORE_PEER_ID
@@ -80,8 +80,8 @@ spec:
               mountPath: /var/hyperledger
             - name: fabric-config
               mountPath: /var/hyperledger/fabric/config
-            - name: ccs-builder
-              mountPath: /var/hyperledger/fabric/chaincode/ccs-builder/bin
+            - name: k8s-helper
+              mountPath: /var/hyperledger/fabric/chaincode/k8s-helper/bin
 
       # load the external chaincode builder into the peer image prior to peer launch.
       initContainers:
@@ -89,10 +89,10 @@ spec:
           image: hyperledgendary/helper
           imagePullPolicy: IfNotPresent
           command: [sh, -c]
-          args: ["cp /go/bin/* /var/hyperledger/fabric/chaincode/ccs-builder/bin/"]
+          args: ["cp /go/bin/* /var/hyperledger/fabric/chaincode/k8s-helper/bin/"]
           volumeMounts:
-            - name: ccs-builder
-              mountPath: /var/hyperledger/fabric/chaincode/ccs-builder/bin
+            - name: k8s-helper
+              mountPath: /var/hyperledger/fabric/chaincode/k8s-helper/bin
 
       volumes:
         - name: fabric-volume
@@ -101,7 +101,7 @@ spec:
         - name: fabric-config
           configMap:
             name: org1-config
-        - name: ccs-builder
+        - name: k8s-helper
           emptyDir: {}
 
 ```

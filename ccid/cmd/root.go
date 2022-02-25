@@ -43,11 +43,7 @@ var cfgFile string
 var rootCmd = &cobra.Command{
 	Use:   "ccid",
 	Short: "Hyper Ledger Fabric External Chaincode Identifier Generator",
-	// Long: ``,
-	// Uncomment the following line if your bare application
-	// has an action associated with it:
-	Args: cobra.MinimumNArgs(1),
-	Run:  mainRun,
+	Run:   mainRun,
 }
 
 type Connection struct {
@@ -60,11 +56,15 @@ type Metadata struct {
 	Path  string `json:"path"`
 	Type  string `json:"type"`
 	Label string `json:"label"`
+	Name  string `json:"name"`
 }
 
 func mainRun(cmd *cobra.Command, args []string) {
-	address := args[0]
-	command := args[1:]
+	command := args[0:]
+	address, err := cmd.Flags().GetString("address")
+	if err != nil {
+		log.WithError(err).Fatal("Getting flag 'address' failed")
+	}
 	label, err := cmd.Flags().GetString("label")
 	if err != nil {
 		log.WithError(err).Fatal("Getting flag 'label' failed")
@@ -77,7 +77,7 @@ func mainRun(cmd *cobra.Command, args []string) {
 	if err != nil {
 		log.WithError(err).Fatal("Getting flag 'meta' failed")
 	}
-	tarBytes := generateTar(address, label, meta)
+	tarBytes := generateTar(address, label, meta, name)
 	shaSum := sha256.Sum256(tarBytes)
 	shaSumStr := hex.EncodeToString(shaSum[:])
 	// save the final tar, if needed
@@ -147,11 +147,12 @@ func envToList(env map[string]string) []string {
 	return res
 }
 
-func generateTar(address string, label string, meta string) []byte {
+func generateTar(address string, label string, meta string, name string) []byte {
 	metadata := Metadata{
 		Path:  "",
 		Type:  "external",
 		Label: label,
+		Name:  name,
 	}
 	connection := Connection{
 		Address:     address,
@@ -267,6 +268,7 @@ func Execute() {
 
 func init() {
 	cobra.OnInitialize(initConfig)
+	rootCmd.Flags().StringP("address", "a", "", "Address of the external chaincode")
 	rootCmd.Flags().StringP("label", "l", "", "Labels of the external chaincode")
 	rootCmd.Flags().StringP("name", "n", "", "External chaincode name")
 	rootCmd.Flags().StringP("output", "o", "", "Output path for the final tar")

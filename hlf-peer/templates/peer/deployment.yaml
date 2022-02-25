@@ -46,10 +46,13 @@ spec:
           image: registry.gitlab.com/xdev-tech/xdev-enterprise-business-network/hlf-k8s/helper:{{ $.Chart.Version }}
           imagePullPolicy: IfNotPresent
           command: [sh, -c]
-          args: ["cp /go/bin/* /var/hyperledger/fabric/chaincode/ccs-builder/bin/"]
+          args:
+            - |-
+              mkdir -p /var/hyperledger/fabric/chaincode/k8s-helper/bin/
+              cp /go/bin/* /var/hyperledger/fabric/chaincode/k8s-helper/bin/
           volumeMounts:
-            - name: ccs-builder
-              mountPath: /var/hyperledger/fabric/chaincode/ccs-builder/bin
+            - name: k8s-helper
+              mountPath: /var/hyperledger/fabric/chaincode/k8s-helper
         # load the chaincode id calculator into the peer image prior to peer launch.
         - name: ccid
           image: registry.gitlab.com/xdev-tech/xdev-enterprise-business-network/hlf-k8s/ccid:{{ $.Chart.Version }}
@@ -60,7 +63,7 @@ spec:
             - name: ccid
               mountPath: /var/hyperledger/fabric/chaincode/ccid/bin
       volumes:
-        - name: ccs-builder
+        - name: k8s-helper
           emptyDir: {}
         - name: ccid
           emptyDir: {}
@@ -220,6 +223,8 @@ spec:
                 export CORE_PEER_TLS_CLIENTROOTCAS_FILES=$(ls -d $CORE_PEER_TLS_CLIENTROOTCAS_FILES)
               fi
 
+              echo "{{ include "hlf-peer.fullname" $ }}-" >> /var/hyperledger/fabric/chaincode/k8s-helper/base-address
+
               echo -e ">\033[0;35m peer node start \033[0m"
               exec peer node start
           envFrom:
@@ -310,8 +315,8 @@ spec:
             # - mountPath: /builders/external/bin/release
             #   name: external-builder-release
             #   subPath: release
-            - name: ccs-builder
-              mountPath: /var/hyperledger/fabric/chaincode/ccs-builder/bin
+            - name: k8s-helper
+              mountPath: /var/hyperledger/fabric/chaincode/k8s-helper
             - name: ccid
               mountPath: /var/hyperledger/fabric/chaincode/ccid/bin
           resources:

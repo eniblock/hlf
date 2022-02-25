@@ -1,11 +1,6 @@
 {{- range $chaincode := .Values.peer.chaincodes }}
 {{- if $chaincode.image }}
 {{ $name := regexReplaceAll "\\W+" ($chaincode.name) "-" }}
-{{- $service := $chaincode.service | default dict }}
-{{- $address := printf "%s-%s:%d" (include "hlf-peer.fullname" $) (regexReplaceAll "\\W+" ($chaincode.name) "-") ($service.port | default 7777) }}
-{{- if $chaincode.address }}
-{{ $address = $chaincode.address }}
-{{- end }}
 ---
 apiVersion: apps/v1
 kind: Deployment
@@ -43,14 +38,22 @@ spec:
       serviceAccountName: {{ include "hlf-peer.serviceAccountName" $ }}
       securityContext:
         {{- toYaml $.Values.podSecurityContext | nindent 8 }}
+      initContainers:
+        - name: ccid
+          image: registry.gitlab.com/xdev-tech/xdev-enterprise-business-network/hlf-k8s/ccid:{{ $.Chart.Version }}
+          imagePullPolicy: IfNotPresent
+          command: [sh, -c]
+          args: ["cp /ccid /var/hyperledger/fabric/chaincode/ccid/bin"]
+          volumeMounts:
+            - name: ccid
+              mountPath: /var/hyperledger/fabric/chaincode/ccid/bin
       containers:
         - image: "{{ $chaincode.image.repository | required "please provide a image.repository value" }}{{ if $chaincode.image.tag }}:{{ $chaincode.image.tag }}{{ end }}"
           name: {{ $name }}
           imagePullPolicy: {{ $chaincode.image.pullPolicy | default $.Values.image.pullPolicy }}
           {{- if $chaincode.command }}
           command:
-            - /ccid
-            - {{ $address }}
+            - /var/hyperledger/fabric/chaincode/ccid/bin/ccid
             {{- if $chaincode.name }}
             - --name
             - {{ $chaincode.name | quote }}
@@ -71,6 +74,9 @@ spec:
               value: 0.0.0.0:{{ $chaincode.port | default 7777 }}
             - name: CORE_PEER_LOCALMSPID
               value: {{ $.Values.peer.mspID | required "Please provide a mspid value" | quote }}
+          volumeMounts:
+            - name: ccid
+              mountPath: /var/hyperledger/fabric/chaincode/ccid/bin
           ports:
             - name: rpc
               containerPort: {{ $chaincode.port | default 7777 }}
@@ -82,6 +88,9 @@ spec:
               port: rpc
           resources:
 {{ toYaml $chaincode.resources | indent 12 }}
+      volumes:
+        - name: ccid
+          emptyDir: {}
     {{- with $.Values.nodeSelector }}
       nodeSelector:
 {{ toYaml . | indent 8 }}

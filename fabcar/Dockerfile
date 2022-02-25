@@ -33,8 +33,6 @@ COPY --from=base /etc/ssl/certs/ca-certificates.crt /etc/ssl/certs/
 # Add-in our unprivileged user
 COPY --from=base /etc/passwd /etc/group /etc/shadow /etc/
 
-COPY --from=registry.gitlab.com/xdev-tech/xdev-enterprise-business-network/hlf-k8s/ccid:develop.27 /ccid /ccid
-
 COPY --from=build /go/src/github.com/fabcar/chaincode /chaincode
 
 COPY --from=build /META-INF /META-INF
