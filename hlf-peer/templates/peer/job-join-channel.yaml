@@ -12,6 +12,7 @@ metadata:
     reloader.stakater.com/auto: "true"
 spec:
   backoffLimit: 100
+  ttlSecondsAfterFinished: 100
   template:
     metadata:
       labels:
