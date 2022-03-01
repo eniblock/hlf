@@ -109,11 +109,8 @@ func run() error {
 }
 
 func updateConnectionData(connection *Connection, metadata *Metadata) error {
-	logger.Println("::Build - updating connection data")
 	if connection.Address == "" {
 		if baseAddr, err := getBaseAddr(); err == nil {
-			logger.Println("::Build - baseAddr: " + baseAddr)
-			logger.Println("::Build - metadata.Name: " + metadata.Name)
 			connection.Address = baseAddr + metadata.Name + ":7777"
 			logger.Println("::Build - computed address: " + connection.Address)
 		}
