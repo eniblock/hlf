@@ -80,7 +80,7 @@ for org in ['org1', 'org2']:
                 values=['hlf-peer/values-' + org + '-' + peer + '.yaml'],
             )
         )
-        k8s_resource(peer + '-hlf-peer:deployment:' + org, labels=[org])
+        k8s_resource(peer + '-hlf-peer:statefulset:' + org, labels=[org])
         k8s_resource(peer + '-hlf-peer-couchdb:statefulset:' + org, labels=[org])
         k8s_resource(peer + '-hlf-peer-fabcar:deployment:' + org, labels=[org])
         k8s_resource(peer + '-hlf-peer-jc-star:job:' + org, labels=[org])

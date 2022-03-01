@@ -1,5 +1,5 @@
 apiVersion: apps/v1
-kind: Deployment
+kind: StatefulSet
 metadata:
   name: {{ include "hlf-peer.fullname" . }}
   namespace: {{ .Release.Namespace }}
@@ -9,7 +9,7 @@ metadata:
   annotations:
     reloader.stakater.com/auto: "true"
 spec:
-  replicas: 1
+  serviceName: {{ include "hlf-peer.fullname" . }}
   selector:
     matchLabels:
       {{- include "hlf-peer.selectorLabels" . | nindent 6 }}
@@ -67,13 +67,6 @@ spec:
           emptyDir: {}
         - name: ccid
           emptyDir: {}
-        - name: data
-        {{- if .Values.persistence.enabled }}
-          persistentVolumeClaim:
-            claimName: {{ .Values.persistence.existingClaim | default (include "hlf-peer.fullname" .) }}
-        {{- else }}
-          emptyDir: {}
-        {{- end }}
         {{- if .Values.secrets.peer.cert }}
         - name: id-cert
           secret:
@@ -343,3 +336,15 @@ spec:
       tolerations:
 {{ toYaml . | indent 8 }}
     {{- end }}
+  volumeClaimTemplates:
+    - metadata:
+        name: data
+      spec:
+        accessModes:
+          - {{ .Values.persistence.accessMode | quote }}
+        resources:
+          requests:
+            storage: {{ .Values.persistence.size | quote }}
+        {{- if .Values.persistence.storageClass }}
+        storageClassName: {{ .Values.persistence.storageClass }}
+        {{- end }}
