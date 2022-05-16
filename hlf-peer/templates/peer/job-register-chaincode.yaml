@@ -88,6 +88,14 @@ spec:
                   exit 0
               fi
 
+              # Collection management
+              if [ ! -z "{{ $chaincode.collection }}" ]
+              then
+	                echo {{ $chaincode.collection }} > /tmp/collection.json
+	                cat /tmp/collection.json
+              fi
+
+
               # bump the sequence number
               seq=$((seq+1))
 
