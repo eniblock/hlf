@@ -14,10 +14,6 @@ spec:
     matchLabels:
       {{- include "hlf-peer.selectorLabels" . | nindent 6 }}
       app.kubernetes.io/component: peer
-  # Ensure we allow our pod to be unavailable, so we can upgrade
-  strategy:
-    rollingUpdate:
-      maxUnavailable: 1
   template:
     metadata:
       {{- with .Values.podAnnotations }}
