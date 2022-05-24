@@ -69,6 +69,15 @@ spec:
             - -c
             - |
               set -ex
+              collection_fileINF=/var/hyperledger/fabric/chaincode/META-INF/collections/{{ $chaincode.name }}-collection_config.json
+              collection_file=/tmp/{{ $chaincode.name }}-collection_config.json
+              collection_tag=0
+              if [[ -f $collection_fileINF ]]; then
+                collection_tag=1
+                cp $collection_fileINF $collection_file
+              fi
+              echo collection_tag: $collection_tag
+
               ccid=`/var/hyperledger/fabric/chaincode/ccid/bin/ccid {{ if ne ($chaincode.label | default "") "" }}-l {{ $chaincode.label }}{{ end }} {{ if $chaincode.metaInf }}-m /var/hyperledger/fabric/chaincode/META-INF {{ end }} -n {{ $chaincode.name }} -o /tmp/chaincode.tar.gz`
               echo chaincode package id: $ccid
               while ! peer channel list | grep -qE '^{{ $chaincode.channel }}$'; do
@@ -87,31 +96,43 @@ spec:
                   # we're good, nothing to do
                   exit 0
               fi
-
-              # Collection management
-              if [ ! -z "{{ $chaincode.collection }}" ]
-              then
-	                echo {{ $chaincode.collection }} > /tmp/collection.json
-	                cat /tmp/collection.json
-              fi
-
-
+              
               # bump the sequence number
               seq=$((seq+1))
 
               sleep `echo $(( RANDOM % 10 ))`
               if ! peer lifecycle chaincode queryapproved --channelID {{ $chaincode.channel }} --name {{ $chaincode.name }} --sequence $seq; then
-                  peer lifecycle chaincode approveformyorg -o {{ $chaincode.orderer_address }} --channelID {{ $chaincode.channel }} --name {{ $chaincode.name }} --version 1 --package-id $ccid --sequence $seq --tls --cafile /var/hyperledger/tls/ord/cert/cacert.pem
+                  if [[ "$collection_tag" -eq 1 ]]; then
+                      echo "**** approveformyorg : need to manage collections ****"
+                      peer lifecycle chaincode approveformyorg -o {{ $chaincode.orderer_address }} --channelID {{ $chaincode.channel }} --name {{ $chaincode.name }} --version 1 --package-id $ccid --sequence $seq --tls --cafile /var/hyperledger/tls/ord/cert/cacert.pem --collections-config $collection_file
+                  else
+                      peer lifecycle chaincode approveformyorg -o {{ $chaincode.orderer_address }} --channelID {{ $chaincode.channel }} --name {{ $chaincode.name }} --version 1 --package-id $ccid --sequence $seq --tls --cafile /var/hyperledger/tls/ord/cert/cacert.pem
+                  fi
               fi
-              while [ `peer lifecycle chaincode checkcommitreadiness -o {{ $chaincode.orderer_address }} --channelID {{ $chaincode.channel }} --name {{ $chaincode.name }} --version 1 --sequence $seq --tls --cafile /var/hyperledger/tls/ord/cert/cacert.pem | grep -E ': false$' | wc -l` != "0" ] ; do
-                  echo Waiting for all organizations to be ready to commit
-                  sleep 3
-              done
+
+              if [[ "$collection_tag" -eq 1 ]]; then
+                  echo "**** checkcommitreadiness : need to manage collections ****"
+                  while [ `peer lifecycle chaincode checkcommitreadiness -o {{ $chaincode.orderer_address }} --channelID {{ $chaincode.channel }} --name {{ $chaincode.name }} --version 1 --sequence $seq --tls --cafile /var/hyperledger/tls/ord/cert/cacert.pem --collections-config $collection_file | grep -E ': false$' | wc -l` != "0" ] ; do
+                      echo Waiting for all organizations to be ready to commit
+                      sleep 3
+                  done
+              else
+                  while [ `peer lifecycle chaincode checkcommitreadiness -o {{ $chaincode.orderer_address }} --channelID {{ $chaincode.channel }} --name {{ $chaincode.name }} --version 1 --sequence $seq --tls --cafile /var/hyperledger/tls/ord/cert/cacert.pem | grep -E ': false$' | wc -l` != "0" ] ; do
+                      echo Waiting for all organizations to be ready to commit
+                      sleep 3
+                  done
+              fi
+
               if ! peer lifecycle chaincode querycommitted --channelID {{ $chaincode.channel }} --name {{ $chaincode.name }} | grep "Sequence: $seq"; then
                   # sleep a random time, to avoid having all the peers creating the channel at once
                   sleep `echo $(( RANDOM % 10 ))`
                   if ! peer lifecycle chaincode querycommitted --channelID {{ $chaincode.channel }} --name {{ $chaincode.name }} | grep "Sequence: $seq"; then
-                      peer lifecycle chaincode commit -o {{ $chaincode.orderer_address }} --channelID {{ $chaincode.channel }} --name {{ $chaincode.name }} --version 1 --sequence $seq --tls --cafile /var/hyperledger/tls/ord/cert/cacert.pem
+                      if [[ "$collection_tag" -eq 1 ]]; then
+                          echo "**** commit : need to manage collections ****"
+                          peer lifecycle chaincode commit -o {{ $chaincode.orderer_address }} --channelID {{ $chaincode.channel }} --name {{ $chaincode.name }} --version 1 --sequence $seq --tls --cafile /var/hyperledger/tls/ord/cert/cacert.pem --collections-config $collection_file
+                      else
+                          peer lifecycle chaincode commit -o {{ $chaincode.orderer_address }} --channelID {{ $chaincode.channel }} --name {{ $chaincode.name }} --version 1 --sequence $seq --tls --cafile /var/hyperledger/tls/ord/cert/cacert.pem
+                      fi
                   else
                       echo chaincode {{ $chaincode.name }} already commited
                   fi
