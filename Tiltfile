@@ -22,6 +22,8 @@ if not os.path.exists('./config/generated/genesis.block'):
 if not os.path.exists('./config/generated/star.tx'):
     local(dk_run + 'env FABRIC_CFG_PATH=/config configtxgen -profile TwoOrgsChannel -outputCreateChannelTx /config/generated/star.tx -channelID star')
 
+local(dk_run + 'env FABRIC_CFG_PATH=/hlf/' + env + ' configtxgen -profile TwoOrgsChannel -outputAnchorPeersUpdate /hlf/' + env + '/generated/anchor-star.tx -channelID star -asOrg ' + org)
+
 
 #### orderers ####
 

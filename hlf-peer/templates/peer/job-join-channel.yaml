@@ -57,6 +57,8 @@ spec:
                     peer channel create -o {{ $channel.orderer_address }} -c {{ $channel.name }} -f /hl_config/channel/{{ $channel.secretName }}/{{ $channel.name }}.tx --outputBlock /hl_config/channel/{{ $channel.name }}.block --tls --cafile /var/hyperledger/tls/ord/cert/cacert.pem
                 fi
                 peer channel join --orderer {{ $channel.orderer_address }} -b /hl_config/channel/{{ $channel.name }}.block
+                echo --- update anchor ---
+                peer channel update --orderer {{ $channel.orderer_address }} -c {{ $channel.name }} -f /hl_config/channel/{{ $channel.anchor_prefix }}-{{ $channel.name }}.tx
               fi
           volumeMounts:
             {{- if $.Values.secrets.peer.cert }}
