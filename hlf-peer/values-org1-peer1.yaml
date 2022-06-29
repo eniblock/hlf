@@ -13,7 +13,7 @@ peer:
   tls:
     server:
       enabled: true
-  mspID: Org1MSP
+  mspID: org1
   gossip:
     bootstrap: peer2-hlf-peer.org1:7051
     endpoint: peer1-hlf-peer.org1:7051
@@ -66,7 +66,6 @@ secrets:
     - name: star
       secretName: starchannel
       orderer_address: orderer1.orderer.localhost:443
-      anchor_prefix: anchor
 
   ## This should contain the Certificate of the Peer Organisation admin
   ## This is necessary to successfully run the peer

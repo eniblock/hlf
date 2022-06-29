@@ -110,7 +110,7 @@ peer:
   couchdbSecret: cdb-peer1-hlf-couchdb
   couchdbInstance: cdb-peer1
   ## MSP ID of the Peer
-  mspID: Org1MSP
+  mspID: org1
   gossip:
     bootstrap: ""
     endpoint: ""

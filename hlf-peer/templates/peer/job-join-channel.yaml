@@ -53,12 +53,11 @@ spec:
               else
                 # sleep a random time, to avoid having all the peers creating the channel at once
                 sleep `echo $(( RANDOM % 10 ))`
-                if ! peer channel fetch config /hl_config/channel/{{ $channel.name }}.block -c {{ $channel.name }} --orderer {{ $channel.orderer_address }} --tls --cafile /var/hyperledger/tls/ord/cert/cacert.pem; then
+                if ! peer channel fetch oldest /hl_config/channel/{{ $channel.name }}.block -c {{ $channel.name }} --orderer {{ $channel.orderer_address }} --tls --cafile /var/hyperledger/tls/ord/cert/cacert.pem; then
                     peer channel create -o {{ $channel.orderer_address }} -c {{ $channel.name }} -f /hl_config/channel/{{ $channel.secretName }}/{{ $channel.name }}.tx --outputBlock /hl_config/channel/{{ $channel.name }}.block --tls --cafile /var/hyperledger/tls/ord/cert/cacert.pem
                 fi
                 peer channel join --orderer {{ $channel.orderer_address }} -b /hl_config/channel/{{ $channel.name }}.block
-                echo --- update anchor ---
-                peer channel update --orderer {{ $channel.orderer_address }} -c {{ $channel.name }} -f /hl_config/channel/{{ $channel.anchor_prefix }}-{{ $channel.name }}.tx
+                peer channel update -o {{ $channel.orderer_address }} -c star -f /hl_config/channel/{{ $channel.secretName }}/anchor-{{ $channel.name }}-{{ $.Values.peer.mspID }}.tx --tls --cafile /var/hyperledger/tls/ord/cert/cacert.pem || true
               fi
           volumeMounts:
             {{- if $.Values.secrets.peer.cert }}

@@ -52,10 +52,10 @@ Organizations:
     - &Org1
         # DefaultOrg defines the organization which is used in the sampleconfig
         # of the fabric.git development environment
-        Name: Org1MSP
+        Name: org1
 
         # ID to load the MSP definition as
-        ID: Org1MSP
+        ID: org1
 
         MSPDir: ./generated/crypto-config//peerOrganizations/org1/msp
 
@@ -65,16 +65,16 @@ Organizations:
         Policies:
             Readers:
                 Type: Signature
-                Rule: "OR('Org1MSP.admin', 'Org1MSP.peer', 'Org1MSP.client')"
+                Rule: "OR('org1.admin', 'org1.peer', 'org1.client')"
             Writers:
                 Type: Signature
-                Rule: "OR('Org1MSP.admin', 'Org1MSP.client')"
+                Rule: "OR('org1.admin', 'org1.client')"
             Admins:
                 Type: Signature
-                Rule: "OR('Org1MSP.admin')"
+                Rule: "OR('org1.admin')"
             Endorsement:
                 Type: Signature
-                Rule: "OR('Org1MSP.peer')"
+                Rule: "OR('org1.peer')"
 
         # leave this flag set to true.
         AnchorPeers:
@@ -89,10 +89,10 @@ Organizations:
     - &Org2
         # DefaultOrg defines the organization which is used in the sampleconfig
         # of the fabric.git development environment
-        Name: Org2MSP
+        Name: org2
 
         # ID to load the MSP definition as
-        ID: Org2MSP
+        ID: org2
 
         MSPDir: ./generated/crypto-config//peerOrganizations/org2/msp
 
@@ -102,16 +102,16 @@ Organizations:
         Policies:
             Readers:
                 Type: Signature
-                Rule: "OR('Org2MSP.admin', 'Org2MSP.peer', 'Org2MSP.client')"
+                Rule: "OR('org2.admin', 'org2.peer', 'org2.client')"
             Writers:
                 Type: Signature
-                Rule: "OR('Org2MSP.admin', 'Org2MSP.client')"
+                Rule: "OR('org2.admin', 'org2.client')"
             Admins:
                 Type: Signature
-                Rule: "OR('Org2MSP.admin')"
+                Rule: "OR('org2.admin')"
             Endorsement:
                 Type: Signature
-                Rule: "OR('Org2MSP.peer')"
+                Rule: "OR('org2.peer')"
 
         AnchorPeers:
             # AnchorPeers defines the location of peers which can be used
@@ -207,10 +207,10 @@ Application: &ApplicationDefaults
             Rule: "MAJORITY Admins"
         LifecycleEndorsement:
                 Type: Signature
-                Rule: "OR('Org1MSP.peer','Org2MSP.peer')"
+                Rule: "OR('org1.peer','org2.peer')"
         Endorsement:
                 Type: Signature
-                Rule: "OR('Org1MSP.peer','Org2MSP.peer')"
+                Rule: "OR('org1.peer','org2.peer')"
 
     Capabilities:
         <<: *ApplicationCapabilities

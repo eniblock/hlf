@@ -22,8 +22,8 @@ if not os.path.exists('./config/generated/genesis.block'):
 if not os.path.exists('./config/generated/star.tx'):
     local(dk_run + 'env FABRIC_CFG_PATH=/config configtxgen -profile TwoOrgsChannel -outputCreateChannelTx /config/generated/star.tx -channelID star')
 
-local(dk_run + 'env FABRIC_CFG_PATH=/hlf/' + env + ' configtxgen -profile TwoOrgsChannel -outputAnchorPeersUpdate /hlf/' + env + '/generated/anchor-star.tx -channelID star -asOrg ' + org)
-
+for org in ['org1', 'org2']:
+    local(dk_run + 'env FABRIC_CFG_PATH=/config configtxgen -profile TwoOrgsChannel -outputAnchorPeersUpdate /config/generated/anchor-star-' + org + '.tx -channelID star -asOrg ' + org)
 
 #### orderers ####
 
@@ -58,7 +58,7 @@ image_build('registry.gitlab.com/xdev-tech/xdev-enterprise-business-network/hlf-
 image_build('registry.gitlab.com/xdev-tech/xdev-enterprise-business-network/hlf-k8s/ccid', 'ccid')
 
 for org in ['org1', 'org2']:
-    k8s_yaml(local(kc_secret + '-n ' + org + ' generic starchannel --from-file=./config/generated/star.tx', quiet=True))
+    k8s_yaml(local(kc_secret + '-n ' + org + ' generic starchannel --from-file=./config/generated/star.tx --from-file=./config/generated/anchor-star-' + org + '.tx', quiet=True))
     k8s_yaml(local(kc_secret + '-n ' + org + ' generic hlf--ord-tlsrootcert --from-file=cacert.pem=./config/generated/crypto-config/ordererOrganizations/orderer/orderers/orderer1.orderer/tls/ca.crt', quiet=True))
     for peer in ['peer1', 'peer2']:
         k8s_yaml(local(kc_secret + '-n ' + org + ' generic hlf--' + peer + '-idcert --from-file=./config/generated/crypto-config/peerOrganizations/' + org + '/peers/' + peer + '.' + org + '/msp/signcerts/' + peer + '.' + org + '-cert.pem', quiet=True))
