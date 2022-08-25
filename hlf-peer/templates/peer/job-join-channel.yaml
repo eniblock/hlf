@@ -19,6 +19,10 @@ spec:
         {{- include "hlf-peer.labels" $ | nindent 8 }}
         app.kubernetes.io/component: join-channel
         {{ include "hlf-peer.fullname" $ }}-client: "true"
+      annotations:
+        # istio-proxy prevents job pods from completing if istio is enabled
+        # https://github.com/istio/istio/issues/6324
+          sidecar.istio.io/inject: "false"
     spec:
       serviceAccountName: {{ include "hlf-peer.serviceAccountName" $ }}
       restartPolicy: "Never"
