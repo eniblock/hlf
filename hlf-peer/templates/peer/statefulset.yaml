@@ -212,7 +212,7 @@ spec:
                 export CORE_PEER_TLS_CLIENTROOTCAS_FILES=$(ls -d $CORE_PEER_TLS_CLIENTROOTCAS_FILES)
               fi
 
-              echo "{{ include "hlf-peer.fullname" $ }}-" >> /var/hyperledger/fabric/chaincode/k8s-helper/base-address
+              echo "{{ include "hlf-peer.fullname" $ }}-" > /var/hyperledger/fabric/chaincode/k8s-helper/base-address
 
               echo -e ">\033[0;35m peer node start \033[0m"
               exec peer node start
