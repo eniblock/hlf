@@ -31,5 +31,5 @@ spec:
               service:
                 name: {{ $fullName }}
                 port:
-                  name: grpc
+                  name: rpc
 {{- end }}

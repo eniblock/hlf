@@ -11,7 +11,7 @@ spec:
     - port: {{ .Values.service.port }}
       targetPort: 7050
       protocol: TCP
-      name: grpc
+      name: rpc
     {{- if eq .Values.ord.metrics.provider "prometheus" }}
     - port: {{ .Values.service.portMetrics }}
       targetPort: 9443
