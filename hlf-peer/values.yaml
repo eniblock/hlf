@@ -198,14 +198,14 @@ nodeSelector: {}
 
 tolerations: []
 
-affinity: {}
-  ## Suggested antiAffinity, as each Peer should be on a separate Node for resilience
-  # podAntiAffinity:
-  #   requiredDuringSchedulingIgnoredDuringExecution:
-  #     - topologyKey: "kubernetes.io/hostname"
-  #       labelSelector:
-  #         matchLabels:
-  #           app: hlf-peer
+affinity:
+ # Suggested antiAffinity, as each Peer should be on a separate Node for resilience
+  podAntiAffinity:
+    requiredDuringSchedulingIgnoredDuringExecution:
+      - topologyKey: "kubernetes.io/hostname"
+        labelSelector:
+          matchLabels:
+            app: hlf-peer
 
 serviceAccount:
   # Specifies whether a service account should be created
