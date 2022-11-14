@@ -51,16 +51,19 @@ helm-ord-oci:
   stage: helm
   image: registry.gitlab.com/xdev-tech/build/helm:2.2
   script:
+    - helm registry login -u $CI_REGISTRY_USER -p $CI_REGISTRY_PASSWORD $CI_REGISTRY
     - build $CI_REGISTRY_IMAGE/helm/hlf-ord ./hlf-ord NO_PATCH
 
 helm-peer-oci:
   stage: helm
   image: registry.gitlab.com/xdev-tech/build/helm:2.2
   script:
+    - helm registry login -u $CI_REGISTRY_USER -p $CI_REGISTRY_PASSWORD $CI_REGISTRY
     - build $CI_REGISTRY_IMAGE/helm/hlf-peer ./hlf-peer NO_PATCH
 
 helm-chaincode-oci:
   stage: helm
   image: registry.gitlab.com/xdev-tech/build/helm:2.2
   script:
+    - helm registry login -u $CI_REGISTRY_USER -p $CI_REGISTRY_PASSWORD $CI_REGISTRY
     - build $CI_REGISTRY_IMAGE/helm/hlf-chaincode ./hlf-chaincode NO_PATCH
