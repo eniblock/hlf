@@ -46,3 +46,21 @@ helm-chaincode:
   image: registry.gitlab.com/xdev-tech/build/helm:2.2
   script:
     - build_std ./hlf-chaincode NO_PATCH
+
+helm-ord-oci:
+  stage: helm
+  image: registry.gitlab.com/xdev-tech/build/helm:2.2
+  script:
+    - build $CI_REGISTRY_IMAGE/helm/hlf-ord ./hlf-ord NO_PATCH
+
+helm-peer-oci:
+  stage: helm
+  image: registry.gitlab.com/xdev-tech/build/helm:2.2
+  script:
+    - build $CI_REGISTRY_IMAGE/helm/hlf-peer ./hlf-peer NO_PATCH
+
+helm-chaincode-oci:
+  stage: helm
+  image: registry.gitlab.com/xdev-tech/build/helm:2.2
+  script:
+    - build $CI_REGISTRY_IMAGE/helm/hlf-chaincode ./hlf-chaincode NO_PATCH
