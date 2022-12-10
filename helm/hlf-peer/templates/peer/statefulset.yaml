@@ -39,7 +39,7 @@ spec:
       # load the external chaincode builder into the peer image prior to peer launch.
       initContainers:
         - name: helper
-          image: registry.gitlab.com/xdev-tech/xdev-enterprise-business-network/hlf-k8s/helper:{{ $.Chart.Version }}
+          image: eniblock/hlf-helper:{{ $.Chart.Version }}
           imagePullPolicy: IfNotPresent
           command: [sh, -c]
           args:
@@ -51,7 +51,7 @@ spec:
               mountPath: /var/hyperledger/fabric/chaincode/k8s-helper
         # load the chaincode id calculator into the peer image prior to peer launch.
         - name: ccid
-          image: registry.gitlab.com/xdev-tech/xdev-enterprise-business-network/hlf-k8s/ccid:{{ $.Chart.Version }}
+          image: eniblock/hlf-ccid:{{ $.Chart.Version }}
           imagePullPolicy: IfNotPresent
           command: [sh, -c]
           args: ["cp /ccid /var/hyperledger/fabric/chaincode/ccid/bin"]
@@ -315,7 +315,7 @@ spec:
 {{ toYaml . | indent 8 }}
     {{- end }}
     {{- with .Values.affinity }}
-      affinity: 
+      affinity:
 {{ toYaml . | indent 8 }}
     {{- end }}
 

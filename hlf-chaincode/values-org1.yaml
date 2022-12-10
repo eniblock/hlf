@@ -1,7 +1,0 @@
-mspid: org1
-name: fabcar
-command:
-  - /chaincode
-image:
-  repository: registry.gitlab.com/the-blockchain-xdev/xdev-sandbox/hlf/fabcar
-label: fabcar

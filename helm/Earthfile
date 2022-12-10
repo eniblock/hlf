@@ -1,0 +1,22 @@
+VERSION 0.6
+
+lint:
+    BUILD ./hlf-chaincode+lint
+    BUILD ./hlf-ord+lint
+    BUILD ./hlf-peer+lint
+
+build:
+    BUILD ./hlf-chaincode+build
+    BUILD ./hlf-ord+build
+    BUILD ./hlf-peer+build
+
+save-package:
+    BUILD ./hlf-chaincode+save-package
+    BUILD ./hlf-ord+save-package
+    BUILD ./hlf-peer+save-package
+
+publish:
+    ARG tag=0.1.0-local
+    BUILD ./hlf-chaincode+publish
+    BUILD ./hlf-ord+publish
+    BUILD ./hlf-peer+publish

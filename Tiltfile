@@ -1,5 +1,8 @@
 #!/usr/bin/env python
 
+# get some color in earthly outputs
+os.environ['FORCE_COLOR'] = '1'
+
 config.define_bool("no-volumes")
 cfg = config.parse()
 
@@ -10,9 +13,6 @@ namespace_create('org2')
 
 clk_k8s = 'clk -a --force-color k8s -c ' + k8s_context() + ' '
 kc_secret = 'kubectl create secret --dry-run=client -o yaml '
-
-load('ext://kubectl_build', 'image_build', 'kubectl_build_registry_secret', 'kubectl_build_enable')
-kubectl_build_enable(local(clk_k8s + 'features --field value --format plain kubectl_build'))
 
 dk_run = 'docker run --rm -u $(id -u):$(id -g) -v $PWD/config:/config hyperledger/fabric-tools:2.3 '
 if not os.path.exists('./config/generated/crypto-config'):
@@ -39,10 +39,10 @@ for orderer in ['orderer1', 'orderer2', 'orderer3']:
 
     k8s_yaml(
         helm(
-            'hlf-ord',
+            'helm/hlf-ord',
             namespace='orderer',
             name=orderer,
-            values=['hlf-ord/values-' + orderer + '.yaml'],
+            values=['helm/hlf-ord/values-' + orderer + '.yaml'],
         )
     )
     k8s_resource(orderer + '-hlf-ord', labels=['orderer'])
@@ -54,8 +54,16 @@ for orderer in ['orderer1', 'orderer2', 'orderer3']:
 
 #### peers ####
 
-image_build('registry.gitlab.com/xdev-tech/xdev-enterprise-business-network/hlf-k8s/helper', 'helper')
-image_build('registry.gitlab.com/xdev-tech/xdev-enterprise-business-network/hlf-k8s/ccid', 'ccid')
+custom_build(
+    "eniblock/hlf-helper",
+    'earthly ./helper+docker --ref=$EXPECTED_REF',
+    ["./helper"],
+)
+custom_build(
+    "eniblock/hlf-ccid",
+    'earthly ./ccid+docker --ref=$EXPECTED_REF',
+    ["./ccid"],
+)
 
 for org in ['org1', 'org2']:
     k8s_yaml(local(kc_secret + '-n ' + org + ' generic starchannel --from-file=./config/generated/star.tx --from-file=./config/generated/anchor-star-' + org + '.tx', quiet=True))
@@ -76,10 +84,10 @@ for org in ['org1', 'org2']:
 
         k8s_yaml(
             helm(
-                'hlf-peer',
+                'helm/hlf-peer',
                 namespace=org,
                 name=peer,
-                values=['hlf-peer/values-' + org + '-' + peer + '.yaml'],
+                values=['helm/hlf-peer/values-' + org + '-' + peer + '.yaml'],
             )
         )
         k8s_resource(peer + '-hlf-peer:statefulset:' + org, labels=[org])
@@ -92,19 +100,13 @@ for org in ['org1', 'org2']:
         if config.tilt_subcommand == 'down' and not cfg.get("no-volumes"):
             local('kubectl --context ' + k8s_context() + ' -n ' + org + ' delete pvc --selector=app.kubernetes.io/instance=' + peer + ' --wait=false')
 
-image_build(
-    'registry.gitlab.com/the-blockchain-xdev/xdev-sandbox/hlf/fabcar',
-    'fabcar'
+custom_build(
+    "eniblock/hlf-fabcar",
+    'earthly ./fabcar+docker --ref=$EXPECTED_REF',
+    ["./fabcar"],
 )
-
 
 #### lint ####
 
-local_resource('ord lint',
-               'docker run --rm -t -v $PWD:/app registry.gitlab.com/xdev-tech/build/helm:2.2' +
-               ' lint hlf-ord --values hlf-ord/values-orderer1.yaml',
-               'hlf-ord/', allow_parallel=True)
-local_resource('peer lint',
-               'docker run --rm -t -v $PWD:/app registry.gitlab.com/xdev-tech/build/helm:2.2' +
-               ' lint hlf-peer --values hlf-peer/values-org2-peer2.yaml',
-               'hlf-peer/', allow_parallel=True)
+local_resource('ord lint', 'earthly ./helm/hlf-ord+lint', 'hlf-ord/', allow_parallel=True)
+local_resource('peer lint', 'earthly ./helm/hlf-peer+lint', 'hlf-peer/', allow_parallel=True)

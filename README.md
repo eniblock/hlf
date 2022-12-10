@@ -3,8 +3,7 @@ Hyperledger Fabric on Kubernetes
 # Helm charts
 
 ```
-helm repo add hlf-k8s https://gitlab.com/api/v4/projects/30449896/packages/helm/dev
-helm search repo hlf-k8s --devel
+helm install peer1 oci://ghcr.io/eniblock/hlf-peer --version 0.2.0
 ```
 
 # Development

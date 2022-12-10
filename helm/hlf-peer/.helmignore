@@ -16,9 +16,11 @@
 *.tmp
 *~
 # Various IDEs
-.project
+.projectgit
 .idea/
 *.tmproj
 
 # OWNERS file for Helm repository
 OWNERS
+
+Earthfile

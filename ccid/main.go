@@ -15,7 +15,7 @@ limitations under the License.
 */
 package main
 
-import "gitlab.com/xdev-tech/xdev-enterprise-business-network/hlf-k8s/ccid/cmd"
+import "github.com/eniblock/hlf/ccid/cmd"
 
 func main() {
 	cmd.Execute()

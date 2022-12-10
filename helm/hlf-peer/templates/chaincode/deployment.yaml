@@ -40,7 +40,7 @@ spec:
         {{- toYaml $.Values.podSecurityContext | nindent 8 }}
       initContainers:
         - name: ccid
-          image: registry.gitlab.com/xdev-tech/xdev-enterprise-business-network/hlf-k8s/ccid:{{ $.Chart.Version }}
+          image: eniblock/hlf-ccid:{{ $.Chart.Version }}
           imagePullPolicy: IfNotPresent
           command: [sh, -c]
           args: ["cp /ccid /var/hyperledger/fabric/chaincode/ccid/bin"]

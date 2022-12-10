@@ -1,0 +1,7 @@
+mspid: org1
+name: fabcar
+command:
+  - /chaincode
+image:
+  repository: eniblock/hlf-fabcar
+label: fabcar

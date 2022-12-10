@@ -1,0 +1,93 @@
+name: ci
+on:
+  push:
+    branches:
+      - "**"
+    tags:
+      - "*"
+
+jobs:
+
+  ############################ tests ############################
+
+  lint-helm:
+    runs-on: [self-hosted]
+    steps:
+    - uses: eniblock/build/actions/setup@4.0
+      id: setup
+      with:
+        dockerhub_token: ${{ secrets.DOCKERHUB_TOKEN }}
+    - run: earthly ./helm/hlf-ord+lint
+
+
+  ############################ docker ############################
+
+  docker-ccid:
+    runs-on: [self-hosted]
+    needs: [lint-helm]
+    steps:
+    - uses: eniblock/build/actions/setup@4.0
+      id: setup
+      with:
+        helmdir: helm/hlf-peer
+        dockerhub_token: ${{ secrets.DOCKERHUB_TOKEN }}
+    - run: earthly ./ccid+docker --tag=${{ steps.setup.outputs.tag }}
+
+  docker-helper:
+    runs-on: [self-hosted]
+    needs: [lint-helm]
+    steps:
+    - uses: eniblock/build/actions/setup@4.0
+      id: setup
+      with:
+        helmdir: helm/hlf-peer
+        dockerhub_token: ${{ secrets.DOCKERHUB_TOKEN }}
+    - run: earthly ./helper+docker --tag=${{ steps.setup.outputs.tag }}
+
+
+  ############################ helm ############################
+
+  helm-publish:
+    runs-on: [self-hosted]
+    needs: [docker-ccid, docker-helper]
+    steps:
+    - uses: eniblock/build/actions/setup@4.0
+      id: setup
+      with:
+        helmdir: helm/hlf-peer
+        dockerhub_token: ${{ secrets.DOCKERHUB_TOKEN }}
+    - name: Build/Publish the helm charts
+      run: |
+        earthly \
+          --secret registry_password=${{ github.token }} \
+          ./helm+publish \
+          --tag=${{ steps.setup.outputs.tag }}
+    - name: Generate job summary
+      run: |
+        cat <<"EOF" >> $GITHUB_STEP_SUMMARY
+        ## Helm package
+        Helm packages was generated with tag `${{ steps.setup.outputs.tag }}`
+
+        Use it directly with
+
+        ~~~bash
+        helm install ord oci://ghcr.io/eniblock/hlf-ord --version ${{ steps.setup.outputs.tag }}
+        helm install peer oci://ghcr.io/eniblock/hlf-peer --version ${{ steps.setup.outputs.tag }}
+        helm install chaincode oci://ghcr.io/eniblock/hlf-chaincode --version ${{ steps.setup.outputs.tag }}
+        ~~~
+
+        or as a helm dependency in your `Chart.yaml`:
+
+        ~~~yaml
+        dependencies:
+          - name: hlf-ord
+            version: "${{ steps.setup.outputs.tag }}"
+            repository: "oci://ghcr.io/eniblock"
+          - name: hlf-peer
+            version: "${{ steps.setup.outputs.tag }}"
+            repository: "oci://ghcr.io/eniblock"
+          - name: hlf-chaincode
+            version: "${{ steps.setup.outputs.tag }}"
+            repository: "oci://ghcr.io/eniblock"
+        ~~~
+        EOF

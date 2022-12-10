@@ -1,0 +1,30 @@
+VERSION 0.6
+
+ARG helmhelper=github.com/eniblock/build/helm:develop
+IMPORT $helmhelper AS helm
+
+deps:
+    DO helm+BASE
+    DO helm+UPDATE
+
+lint:
+    FROM +deps
+    COPY . ./
+    RUN lint peer ./ --values values-org1-peer1.yaml
+
+build:
+    FROM +deps
+    ARG tag=0.1.0-local
+    DO helm+BUILD --tag=${tag} --patch_app_version=false
+    SAVE ARTIFACT /app/*-${tag}.tgz
+
+save-package:
+    FROM scratch
+    COPY +build/*.tgz /
+    SAVE ARTIFACT /*.tgz AS LOCAL ./
+
+publish:
+    ARG tag=0.1.0-local
+    FROM +build --tag=${tag}
+    DO helm+LOGIN
+    DO helm+PUBLISH --repository=ghcr.io/eniblock/hlf-peer

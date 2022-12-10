@@ -1,4 +1,4 @@
-module gitlab.com/xdev-tech/xdev-enterprise-business-network/hlf-k8s/ccid
+module github.com/eniblock/hlf/ccid
 
 go 1.16
 

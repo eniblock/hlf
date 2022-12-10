@@ -19,8 +19,7 @@ image:
   repository: hyperledger/fabric-peer
   tag: amd64-2.3.1
   pullPolicy: IfNotPresent
-  pullSecrets:
-    - name: gitlab-registry
+  pullSecrets: []
 
 service:
   # Cluster IP or LoadBalancer

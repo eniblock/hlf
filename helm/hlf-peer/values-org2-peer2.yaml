@@ -3,7 +3,7 @@ global:
 
 ingress:
   enabled: false
-  host: peer2.org1.localhost
+  host: peer2.org2.localhost
   secretName: hlf--peer2-tls
 
 ##################################
@@ -13,17 +13,17 @@ peer:
   tls:
     server:
       enabled: true
-  mspID: org1
+  mspID: org2
   gossip:
-    bootstrap: peer1-hlf-peer.org1:7051
-    endpoint: peer2-hlf-peer.org1:7051
+    bootstrap: peer1-hlf-peer.org2:7051
+    endpoint: peer2-hlf-peer.org2:7051
   chaincodes:
     - name: fabcar
       label: fabcar
       orderer_address: orderer1.orderer.localhost:443
       channel: star
       image:
-        repository: registry.gitlab.com/the-blockchain-xdev/xdev-sandbox/hlf/fabcar
+        repository: eniblock/hlf-fabcar
       command:
         - /chaincode
       metaInf: true
@@ -66,7 +66,7 @@ secrets:
     - name: star
       secretName: starchannel
       orderer_address: orderer1.orderer.localhost:443
-      anchorKey: anchor-star-org1
+      anchorKey: anchor-star-org2
 
   ## This should contain the Certificate of the Peer Organisation admin
   ## This is necessary to successfully run the peer

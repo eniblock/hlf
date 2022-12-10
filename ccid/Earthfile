@@ -1,0 +1,38 @@
+VERSION 0.6
+
+deps:
+    FROM golang:1.18-alpine
+    WORKDIR /app
+    # Create appuser.
+    ENV USER=appuser
+    ENV UID=10001
+    # See https://stackoverflow.com/a/55757473/12429735RUN
+    RUN adduser \
+        --disabled-password \
+        --gecos "" \
+        --home "/nonexistent" \
+        --shell "/sbin/nologin" \
+        --no-create-home \
+        --uid "${UID}" \
+        "${USER}"
+    COPY go.mod go.sum ./
+    RUN go mod download -x
+
+build:
+    FROM +deps
+    COPY . .
+    RUN CGO_ENABLED=0 GOOS=linux go build -ldflags="-w -s"
+    SAVE ARTIFACT /etc/group
+    SAVE ARTIFACT /etc/passwd
+    SAVE ARTIFACT /app/ccid
+
+docker:
+    FROM busybox
+    COPY +build/passwd /etc/passwd
+    COPY +build/group /etc/group
+    COPY +build/ccid /ccid
+    USER appuser:appuser
+    ENTRYPOINT ["/ccid"]
+    ARG tag=latest
+    ARG ref=eniblock/hlf-ccid:${tag}
+    SAVE IMAGE --push ${ref}

@@ -1,0 +1,16 @@
+VERSION 0.6
+
+build:
+    FROM golang:1.18-alpine
+    WORKDIR /go/src/github.com/hyperledgendary/helper
+    COPY . .
+    RUN go install -v ./cmd/...
+    SAVE ARTIFACT /go/bin/*
+
+docker:
+    FROM alpine
+    COPY +build/* /go/bin/
+    ENV PATH=/go/bin:$PATH
+    ARG tag=latest
+    ARG ref=eniblock/hlf-helper:${tag}
+    SAVE IMAGE --push ${ref}
