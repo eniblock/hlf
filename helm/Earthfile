@@ -17,6 +17,6 @@ save-package:
 
 publish:
     ARG tag=0.1.0-local
-    BUILD ./hlf-chaincode+publish
-    BUILD ./hlf-ord+publish
-    BUILD ./hlf-peer+publish
+    BUILD ./hlf-chaincode+publish --tag=${tag}
+    BUILD ./hlf-ord+publish --tag=${tag}
+    BUILD ./hlf-peer+publish --tag=${tag}
