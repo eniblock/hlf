@@ -60,7 +60,7 @@ couchdb:
     tag: 3.2.1
     pullPolicy: IfNotPresent
     pullSecrets: []
-
+  logLevel: warning
   persistence:
     enabled: true
     annotations: {}

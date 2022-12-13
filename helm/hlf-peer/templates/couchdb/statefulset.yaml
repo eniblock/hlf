@@ -26,7 +26,16 @@ spec:
         - name: couchdb
           image: "{{ .Values.couchdb.image.repository }}:{{ .Values.couchdb.image.tag | default .Chart.AppVersion }}"
           imagePullPolicy: {{ .Values.couchdb.image.pullPolicy }}
-          args:
+          command:
+            - bash
+            - -c
+            - |
+              set -e
+              cat <<EOF > /opt/couchdb/etc/local.d/10_log.ini
+              [log]
+              level={{ .Values.couchdb.logLevel }}
+              EOF
+              exec tini -- /docker-entrypoint.sh /opt/couchdb/bin/couchdb
           ports:
             - name: api
               containerPort: 5984
