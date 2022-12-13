@@ -23,7 +23,7 @@ spec:
     spec:
       serviceAccountName: {{ include "hlf-peer.serviceAccountName" . }}
       containers:
-        - name: hlf-peer
+        - name: couchdb
           image: "{{ .Values.couchdb.image.repository }}:{{ .Values.couchdb.image.tag | default .Chart.AppVersion }}"
           imagePullPolicy: {{ .Values.couchdb.image.pullPolicy }}
           args:
